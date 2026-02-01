@@ -21,6 +21,32 @@
 | Redis | Alpine | Caching & Celery broker |
 | Docker Compose | Latest | Container orchestration |
 
+  ## MediaCMS for CyTube Change-File List
+  
+/mediacms/
+├── docker-compose.yaml                    # v0.3.0 - Container orchestration
+├── deploy/docker/
+│   ├── local_settings.py                  # v0.1.1 - Django settings (HLS, 480p)
+│   ├── nginx/mediacms.conf                # Nginx config (no CORS)
+│   └── init-scripts/remove-nginx-cors.sh  # Startup script
+├── scripts/
+│   ├── docker-healthcheck.sh              # v4.4 - Version-based config
+│   ├── init_validate_storage.sh           # v1.0.0 - Storage setup
+│   └── (backup files with timestamps)
+├── caddy/
+│   └── Caddyfile                          # v0.2.4 - Reverse proxy config
+├── cms/
+│   ├── urls.py                            # v0.0.1 - Django URL routing
+│   └── custom_api.py                      # v0.3.0 - CyTube manifest API
+├── custom_urls.py                         # v0.1.3 - Custom API URLs
+├── static/js/
+│   ├── cytube-export.js                   # CyTube export button
+│   └── encoding-status.js                 # v1.7.0 - Real-time encoding widget
+├── templates/
+│   └── root.html                          # Custom UI templates
+└── PHASE1_HEALTHCHECK_V4.4_DOCUMENTATION.md  # This session's docs
+
+
   # Looking for the Original MediaCMS?
 
   The original project can be located here: https://github.com/mediacms-io/mediacms
