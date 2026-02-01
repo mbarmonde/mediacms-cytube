@@ -23,7 +23,7 @@
 
   ## MediaCMS for CyTube Change-File List
   
-/mediacms/
+```/mediacms/
 ├── docker-compose.yaml                    # v0.3.0 - Container orchestration
 ├── deploy/docker/
 │   ├── local_settings.py                  # v0.1.1 - Django settings (HLS, 480p)
@@ -44,8 +44,7 @@
 │   └── encoding-status.js                 # v1.7.0 - Real-time encoding widget
 ├── templates/
 │   └── root.html                          # Custom UI templates
-└── PHASE1_HEALTHCHECK_V4.4_DOCUMENTATION.md  # This session's docs
-
+```
 
   # Looking for the Original MediaCMS?
 
