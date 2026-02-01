@@ -23,7 +23,8 @@
 
   ## MediaCMS for CyTube Change-File List
   
-```/mediacms/
+```
+/mediacms/
 ├── docker-compose.yaml                    # v0.3.0 - Container orchestration
 ├── deploy/docker/
 │   ├── local_settings.py                  # v0.1.1 - Django settings (HLS, 480p)
