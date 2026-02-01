@@ -2,14 +2,14 @@
 
   ## MediaCMS for CyTube Key Changes
 
-  This clone of MediaCMS features integration into Cytube, including:
-  - HLS Streaming at 480p - MediaCMS encodes all uploads to H.264 480p HLS with 6-second segments using veryfast preset
-  - CyTube Integration - Custom API generates CyTube-compatible JSON manifests with application/x-mpegURL content type per [CyTube best practices](https://github.com/calzoneman/sync/blob/3.0/docs/custom-media.md)
-  - Real-time Encoding Status Widget - JavaScript widget (v1.7) displays encoding progress with ETA calculation, auto-updates every 3 seconds, shows "Ready for Export to CyTube!" when complete
-  - One-click Export Button - Floating button on video pages copies CyTube manifest URL to clipboard
-  - Block Storage Integration - All media stored on with proper volume mounts
-  - Automated Container Health - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
-  - Large File Upload Support - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
+  This fork of MediaCMS features integration for CyTube, including:
+  - *HLS Streaming at 480p* - MediaCMS encodes all uploads to H.264 480p HLS with 6-second segments using veryfast preset
+  - *CyTube Integration* - Custom API generates CyTube-compatible JSON manifests with application/x-mpegURL content type per [CyTube best practices](https://github.com/calzoneman/sync/blob/3.0/docs/custom-media.md)
+  - *Real-time Encoding Status Widget* - JavaScript widget (v1.7) displays encoding progress with ETA calculation, auto-updates every 3 seconds, shows "Ready for Export to CyTube!" when complete
+  - *One-click Export Button* - Floating button on video pages copies CyTube manifest URL to clipboard
+  - *Block Storage Integration* - All media stored on with proper volume mounts
+  - *Automated Container Health* - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
+  - *Large File Upload Support* - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
 
   ## MediaCMS for CyTube Stack
 
