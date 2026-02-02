@@ -47,9 +47,9 @@ nano /mediacms# nano caddy/Caddyfile
  chmod +x /mediacms/cytube-execute-all-sh-and-storage-init.sh
  ```
  
- 4. Run docker-compose up
+ 4. Run the init script and pay attention to the output
  ```
- docker-compose up
+/mediacms/cytube-execute-all-sh-and-storage-init.sh
  ```
  
 
