@@ -1,0 +1,102 @@
+# dev-v0.2.4
+#####
+# v0.2.4 - Fixed TLS error for Caddy 2.10.2
+#   - Removed tls_timeout (not needed for http:// backends)
+#   - Only using: read_timeout, write_timeout, response_header_timeout, dial_timeout
+#   - These 4 timeouts fix upload processing issues
+#####
+
+# Stored at: /mediacms/caddy/Caddyfile
+# Find Replace dev.420grindhouseserver.com
+
+dev.420grindhouseserver.com {
+    # Handle HLS playlists (.m3u8 files)
+    @hls_playlists {
+        path *.m3u8
+    }
+    handle @hls_playlists {
+        reverse_proxy http://media_cms {
+            flush_interval -1
+            transport http {
+                read_timeout 2m
+                write_timeout 2m
+                dial_timeout 30s
+            }
+        }
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+            Access-Control-Allow-Headers "Range, Content-Type"
+            Access-Control-Expose-Headers "Content-Length, Content-Range"
+            Content-Type "application/x-mpegURL"
+            Cache-Control "public, max-age=10"
+        }
+    }
+    
+    # Handle HLS segments (.ts files)
+    @hls_segments {
+        path *.ts
+    }
+    handle @hls_segments {
+        reverse_proxy http://media_cms {
+            flush_interval -1
+            transport http {
+                read_timeout 2m
+                write_timeout 2m
+                dial_timeout 30s
+            }
+        }
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+            Access-Control-Allow-Headers "Range, Content-Type"
+            Access-Control-Expose-Headers "Content-Length, Content-Range"
+            Content-Type "video/mp2t"
+            Cache-Control "public, max-age=31536000"
+        }
+    }
+    
+    # Handle JSON manifests
+    @json_manifests {
+        path *.json
+    }
+    handle @json_manifests {
+        reverse_proxy http://media_cms {
+            flush_interval -1
+        }
+        header {
+            Access-Control-Allow-Origin *
+            Content-Type "application/json"
+            Cache-Control "public, max-age=3600"
+        }
+    }
+    
+    # Handle all other requests (including uploads and processing)
+    handle {
+        reverse_proxy http://media_cms {
+            flush_interval -1
+            
+            # Extended timeouts for large file uploads and processing
+            transport http {
+                # Wait 1 hour for backend to send response
+                read_timeout 3600s
+                
+                # Wait 1 hour to send request to backend
+                write_timeout 3600s
+                
+                # Wait 1 hour for response headers from backend
+                # CRITICAL: Allows MediaCMS to process 8GB files
+                response_header_timeout 3600s
+                
+                # Wait 30 seconds to establish connection
+                dial_timeout 30s
+            }
+        }
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, HEAD, OPTIONS, POST, PUT"
+            Access-Control-Allow-Headers "Range, Content-Type, Authorization, X-Requested-With"
+            Access-Control-Expose-Headers "Content-Length, Content-Range"
+        }
+    }
+}

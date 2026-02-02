@@ -26,19 +26,20 @@
   
 ```
 /mediacms/
-├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration - >>> Requires domain changes
+├── .env                            # dev-v0.1.1 - .env for docker-compose.yaml - >>> Domain changes
+├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration - >>> Domain changes
 ├── deploy/docker/
 │   └── Cocal_settings.py           # dev-v0.1.1 - Django settings (HLS, 480p)
 ├── scripts/
-│   ├── docker-healthcheck.sh       # dev-v4.4.0 - changes the nginx defaults for CORS serving and encoding profiles
-│   └── Cinit_validate_storage.sh    # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
+│   ├── docker-healthcheck.sh       # dev-v4.4.0 - changes nginx defaults for CORS serving and encoding profiles
+│   └── Cinit_validate_storage.sh   # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 ├── caddy/
-│   └── Caddyfile                   # dev-v0.2.4 - Reverse proxy config - >>> Requires domain changes
+│   └── Caddyfile                   # dev-v0.2.4 - Reverse proxy config - >>> Domain changes
 │   └── caddy                              
-│       └── certificates            # OPTIONAL - contains current certificates for caddy via Let's Encrypt if testing
+│       └── certificates            # OPTIONAL - where certificates go for caddy via Let's Encrypt if testing
 ├── cms/
-│   └── urls.py                     # dev-v0.1.0 - Django URL routing - >>> Requires changes if non-HTTPS
-├── custom_api.py                   # dev-v0.3.0 - CyTube manifest API - >>> Requires domain changes
+│   └── urls.py                     # dev-v0.1.0 - Django URL routing - >>>>>>> Changes if non-HTTPS
+├── custom_api.py                   # dev-v0.3.0 - CyTube manifest API - >>> Domain changes
 ├── custom_urls.py                  # dev-v0.1.3 - Custom API URLs
 ├── static/js/
 │   ├── cytube-export.js            # dev-v0.1.0 - CyTube export button via media page
