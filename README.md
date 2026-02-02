@@ -68,26 +68,27 @@ nano /mediacms# nano caddy/Caddyfile
   
 ```
 /mediacms/
-├── .env                            D - # dev-v0.1.2 - .env for docker-compose.yaml - >>> User, Pass, Email changes, 1 count ea
-├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration
+├── .env                                       D - # dev-v0.1.2 - .env for docker-compose.yaml - >>> User, Pass, Email changes, 1 count ea
+├── docker-compose.yaml                        # dev-v0.3.2 - Container orchestration
 ├── deploy/docker/
-│   └── Local_settings.py           D - # dev-v0.1.2 - Django settings (HLS, 480p) - >>> Domain / Descrip changes, 1 count, 2 counts
+│   └── Local_settings.py                      D - # dev-v0.1.2 - Django settings (HLS, 480p) - >>> Domain / Descrip changes, 1 count, 2 counts
 ├── scripts/
-│   ├── docker-healthcheck.sh       # dev-v4.4.0 - changes nginx defaults for CORS serving and encoding profiles
-│   └── init_validate_storage.sh    # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
+│   ├── docker-healthcheck.sh                  # dev-v4.4.0 - changes nginx defaults for CORS serving and encoding profiles
+│   └── init_validate_storage.sh               # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 ├── caddy/
-│   └── Caddyfile                   D - # dev-v0.2.5 - Reverse proxy config - >>> Domain changes, 1 count
+│   └── Caddyfile                              D - # dev-v0.2.5 - Reverse proxy config - >>> Domain changes, 1 count
 │   └── *caddy*                              
-│       └── *certificates*          *# OPTIONAL - where certificates go for caddy via Let's Encrypt if testing*
+│       └── *certificates*                     *# OPTIONAL - where certificates go for caddy via Let's Encrypt if testing*
 ├── cms/
-│   └── urls.py                     # dev-v0.1.0 - Django URL routing - >>>>>>> Changes if non-HTTPS
-├── custom_api.py                   D - # dev-v0.3.1 - CyTube manifest API - >>> Domain changes, 1 count
-├── custom_urls.py                  # dev-v0.1.3 - Custom API URLs
+│   └── urls.py                                # dev-v0.1.0 - Django URL routing - >>>>>>> Changes if non-HTTPS
+├── custom_api.py                              D - # dev-v0.3.1 - CyTube manifest API - >>> Domain changes, 1 count
+├── custom_urls.py                             # dev-v0.1.3 - Custom API URLs
 ├── static/js/
-│   ├── cytube-export.js            # dev-v0.1.0 - CyTube export button via media page
-│   └── encoding-status.js          # dev-v0.1.7 - Real-time encoding widget status
+│   ├── cytube-export.js                       # dev-v0.1.0 - CyTube export button via media page
+│   └── encoding-status.js                     # dev-v0.1.7 - Real-time encoding widget status
 ├── templates/
-│   └── root.html                   # dev-v0.1.0 - Custom UI templates
+│   └── root.html                              # dev-v0.1.0 - Custom UI templates
+├── cytube-execute-all-sh-and-storage-init.sh  # dev-v0.1.3 - Custom API URLs
 ```
 
   ## MediaCMS for CyTube Storage Architecture for Block Storage

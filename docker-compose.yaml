@@ -1,5 +1,7 @@
-# dev-v0.3.1
+# dev-v0.3.2
+
 #####
+# v0.3.2 - fixed no longer existent path issues
 # v0.3.1 - Reconfigured for a .env file for clarity
 #   - Refactored into variables for Admin Credentials, Database Configuration, Storage Paths, Image Versions, Timezone, and Deployment Replicas
 # v0.3.0 - AUTOMATED: Added healthcheck to auto-remove nginx CORS headers
@@ -44,7 +46,7 @@ services:
       replicas: ${WEB_REPLICAS}
     volumes:
       - ./:/home/mediacms.io/mediacms/
-      - ./deploy/docker/nginx/mediacms.conf:/etc/nginx/sites-enabled/default
+      #- ./deploy/docker/nginx/mediacms.conf:/etc/nginx/sites-enabled/default
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
       - ./scripts/docker-healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
     environment:

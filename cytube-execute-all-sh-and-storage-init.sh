@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# dev-v0.1.5
+# dev-v0.1.6
 
 #####
+# v0.1.6 - fixed path issues by commenting out folder locations
 # v0.1.5 - Integrated all files into GitHub pull - Only for chmod all files to execute and storage config
 # v0.1.4 - Final script for alt root folder copy 
 #- Added a way to copy certificates to caddy/caddy/certificates for dev.420grindhouseserver.com helping not hit the limit for minting a new cert, hitting the ACME limits
@@ -28,15 +29,15 @@ DEST_DIR="/mediacms"
 
 ## Include both top-level and nested folders
 # TARGET_FOLDERS=(
-    "caddy"
-    "caddy/caddy/certificates"
-    "cms"
-    "deploy/docker"
-    "deploy/docker/nginx"
-    "scripts"
-    "static/js"
-    "templates"
-)
+#    "caddy"
+#    "caddy/caddy/certificates"
+#    "cms"
+#    "deploy/docker"
+#    "deploy/docker/nginx"
+#    "scripts"
+#    "static/js"
+#    "templates"
+#)
 
 ## Create destination directory if it doesn't exist
 # mkdir -p "$DEST_DIR"
