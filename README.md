@@ -23,23 +23,23 @@ git clone https://github.com/mbarmonde/mediacms-cytube /mediacms
 # Find and Replace LOGON SUPERADMIN USERNAME, 1ea
 # Find and Replace LOGON SUPERADMIN EMAIL, 1ea
 # Find and Replace LOGON SUPERADMIN PASSWORD, 1ea
-nano /mediacms# nano .env
+nano /mediacms/.env
 ```
 
 ```
 # Find Replace YOUR.DOMAIN.COM, 1ea
 # Find Replace YOUR SERVER DESCRIPTION, 2ea
-nano /mediacms# nano deploy/docker/local_settings.py
+nano /mediacms/deploy/docker/local_settings.py
 ```
 
 ```
 # Find Replace YOUR.DOMAIN.COM, 1ea 
-nano /mediacms# nano caddy/Caddyfile
+nano /mediacms/caddy/Caddyfile
 ```
 
 ```
 # Find Replace YOUR.DOMAIN.COM, 1ea
- nano /mediacms# nano custom_api.py
+ nano /mediacms/custom_api.py
  ```
  
  3. Make the Init script executable
