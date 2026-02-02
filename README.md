@@ -27,7 +27,7 @@
 ```
 /mediacms/
 ├── .env                            # dev-v0.1.1 - .env for docker-compose.yaml - >>> Domain changes
-├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration - >>> Domain changes
+├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration
 ├── deploy/docker/
 │   └── Cocal_settings.py           # dev-v0.1.1 - Django settings (HLS, 480p)
 ├── scripts/
@@ -47,6 +47,7 @@
 ├── templates/
 │   └── root.html                   # dev-v0.1.0 - Custom UI templates
 ```
+
   ## MediaCMS for CyTube Storage Architecture for Block Storage
   
 ```
@@ -61,7 +62,6 @@ Host: /mnt/ebs/mediacms_media/
 
 Container: /home/mediacms.io/mediacms/media_files/ (mounted from above via docker-compose.yaml)
 ```
-
 
   # Looking for the Original MediaCMS?
 
