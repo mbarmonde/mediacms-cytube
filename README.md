@@ -10,6 +10,48 @@
   - **Block Storage Integration** - All media stored on with proper volume mounts
   - **Automated Container Health** - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
   - **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
+  
+  ## MediaCMS for CyTube Get Started
+  
+  1. Clone the repo to a root folder called mediacms:
+```
+git clone https://github.com/mbarmonde/mediacms-cytube /mediacms`
+```
+  
+  2. Modify then save each of the following files with your settings and info:
+```
+# Find and Replace LOGON SUPERADMIN USERNAME, 1ea
+# Find and Replace LOGON SUPERADMIN EMAIL, 1ea
+# Find and Replace LOGON SUPERADMIN PASSWORD, 1ea
+nano /mediacms# nano .env
+```
+
+```
+# Find Replace YOUR.DOMAIN.COM, 1ea
+# Find Replace YOUR SERVER DESCRIPTION, 2ea
+nano /mediacms# nano deploy/docker/local_settings.py
+```
+
+```
+# Find Replace YOUR.DOMAIN.COM, 1ea 
+nano /mediacms# nano caddy/Caddyfile
+```
+
+```
+# Find Replace YOUR.DOMAIN.COM, 1ea
+ nano /mediacms# nano custom_api.py
+ ```
+ 
+ 3. Make the Init script executable
+ ```
+ chmod +x /mediacms/cytube-execute-all-sh-and-storage-init.sh
+ ```
+ 
+ 4. Run docker-compose up
+ ```
+ docker-compose up
+ ```
+ 
 
   ## MediaCMS for CyTube Stack
 
