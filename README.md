@@ -15,7 +15,7 @@
   
   1. Clone the repo to a root folder called mediacms:
 ```
-git clone https://github.com/mbarmonde/mediacms-cytube /mediacms`
+git clone https://github.com/mbarmonde/mediacms-cytube /mediacms
 ```
   
   2. Modify then save each of the following files with your settings and info:
