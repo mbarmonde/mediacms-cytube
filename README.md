@@ -26,26 +26,30 @@
   
 ```
 /mediacms/
-├── docker-compose.yaml                    # v0.3.1 - Container orchestration
+├── docker-compose.yaml                    # dev-v0.3.1 - Container orchestration - >>> Requires domain changes
 ├── deploy/docker/
-│   ├── local_settings.py                  # v0.1.1 - Django settings (HLS, 480p)
-│   ├── nginx/mediacms.conf                # Nginx config (no CORS)
-│   └── init-scripts/remove-nginx-cors.sh  # Startup script
+│   ├── local_settings.py                  # dev-v0.1.1 - Django settings (HLS, 480p)
+│   └── nginx
+│       └── mediacms.conf                  # dev-v0.1.0 - Nginx config (no CORS)  - may be deprecated <<<
+│   └── init-scriptsh                      
+│       └── remove-nginx-cors.sh           # dev-v0.1.0 Startup script - may be deprecated <<<
 ├── scripts/
-│   ├── docker-healthcheck.sh              # v4.4 - Version-based config
-│   ├── init_validate_storage.sh           # v1.0.0 - Storage setup
+│   ├── docker-healthcheck.sh              # dev-v4.4.0 - changes the nginx defaults for CORS serving and encoding profiles
+│   ├── init_validate_storage.sh           # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 │   └── (backup files with timestamps)
 ├── caddy/
-│   └── Caddyfile                          # v0.2.4 - Reverse proxy config
+│   └── Caddyfile                          # dev-v0.2.4 - Reverse proxy config - >>> Requires domain changes
+│   └── caddy                              
+│       └── certificates                   # OPTIONAL - contains current certificates for caddy via Let's Encrypt if testing
 ├── cms/
-│   ├── urls.py                            # v0.0.1 - Django URL routing
-│   └── custom_api.py                      # v0.3.0 - CyTube manifest API
-├── custom_urls.py                         # v0.1.3 - Custom API URLs
+│   └── urls.py                            # dev-v0.1.0 - Django URL routing - >>> Requires changes if non-HTTPS
+├── custom_api.py                          # dev-v0.3.0 - CyTube manifest API - >>> Requires domain changes
+├── custom_urls.py                         # dev-v0.1.3 - Custom API URLs
 ├── static/js/
-│   ├── cytube-export.js                   # CyTube export button
-│   └── encoding-status.js                 # v1.7.0 - Real-time encoding widget
+│   ├── cytube-export.js                   # dev-v0.1.0 - CyTube export button via media page
+│   └── encoding-status.js                 # dev-v0.1.7 - Real-time encoding widget status
 ├── templates/
-│   └── root.html                          # Custom UI templates
+│   └── root.html                          # dev-v0.1.0 - Custom UI templates
 ```
   ## MediaCMS for CyTube Storage Architecture for Block Storage
   

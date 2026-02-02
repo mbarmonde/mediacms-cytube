@@ -1,3 +1,10 @@
+# dev-v0.0.1
+#####
+#- Initial release
+#####
+# Stored at: /mediacms/cms/urls.py
+# Creates custom django code for CyTube
+
 import debug_toolbar
 from django.conf import settings
 from django.conf.urls import include
@@ -7,6 +14,11 @@ from django.views.generic.base import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.permissions import AllowAny
+# ADDED THE NEXT 4 LINES FOR CUSTOM CYTUBE
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.views.static import serve
+from django.urls import path, include, re_path
 
 schema_view = get_schema_view(
     openapi.Info(title="MediaCMS API", default_version='v1', contact=openapi.Contact(url="https://mediacms.io"), x_logo={"url": "../../static/images/logo_dark.svg"}),
@@ -16,7 +28,21 @@ schema_view = get_schema_view(
 
 # refactor seriously
 
+# ADDED THIS BLOCK FOR CUSTOM CYTUBE
 urlpatterns = [
+    # Add media serving FIRST, before other patterns
+    re_path(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
+
+    path('', include('custom_urls')),
+    path("", include("files.urls")),
+    # ... rest of existing patterns ...
+]
+
+urlpatterns = [
+    # ADDED THIS NEXT LINE FOR CUSTOM CYTUBE
+    path('', include('custom_urls')),  # ADD THIS LINE AT THE TOP
     re_path(r"^__debug__/", include(debug_toolbar.urls)),
     path(
         "robots.txt",

@@ -1,3 +1,14 @@
+<!-- // dev-v0.1.0
+
+/////
+//- changed the serving location of cytube-export.js to static from media
+//- Initial release
+/////
+
+// Stored at: /mediacms/templates/root.html
+// This file should help add the the CyTube button and encoding widget -->
+ 
+ 
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -51,7 +62,15 @@
     {% include "common/body-scripts.html" %}
 
     {% block bottomimports %}{% endblock bottomimports %}
+    <!-- CyTube Export Button Script -->
+    <!-- <script src="/media/custom/cytube-export.js"></script> -->
+    <script src="{% static 'js/cytube-export.js' %}"></script>
+
+    {% load static %}
+    <!-- Encoding Status Widget -->
+    <script src="{% static 'js/encoding-status.js' %}"></script>
 
 </body>
 
 </html>
+
