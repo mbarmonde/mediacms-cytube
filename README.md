@@ -16,6 +16,7 @@
   | Component | Version | Purpose |
 |-----------|---------|---------|
 | MediaCMS | 7.2 | Video management & encoding platform |
+| Celery | Latest | Distributed task queue system that handles asynchronous background processing for media operations.
 | Caddy | 2.10.2 | Reverse proxy with HLS optimization |
 | PostgreSQL | 17.2 | Database |
 | Redis | Alpine | Caching & Celery broker |
@@ -25,7 +26,7 @@
   
 ```
 /mediacms/
-├── docker-compose.yaml                    # v0.3.0 - Container orchestration
+├── docker-compose.yaml                    # v0.3.1 - Container orchestration
 ├── deploy/docker/
 │   ├── local_settings.py                  # v0.1.1 - Django settings (HLS, 480p)
 │   ├── nginx/mediacms.conf                # Nginx config (no CORS)
@@ -46,6 +47,21 @@
 ├── templates/
 │   └── root.html                          # Custom UI templates
 ```
+  ## MediaCMS for CyTube Storage Architecture for Block Storage
+  
+```
+Host: /mnt/ebs/mediacms_media/
+  ├── original/           # Uploaded files
+  ├── hls/                # HLS segments (hash-based directories)
+  ├── thumbnails/         # Video thumbnails
+  ├── cytube_manifests/   # Generated JSON manifests
+  ├── userlogos/          # User avatars
+  └── encodings/          # Encoded video files
+
+
+Container: /home/mediacms.io/mediacms/media_files/ (mounted from above via docker-compose.yaml)
+```
+
 
   # Looking for the Original MediaCMS?
 
