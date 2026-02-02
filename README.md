@@ -28,14 +28,10 @@
 /mediacms/
 ├── docker-compose.yaml             # dev-v0.3.1 - Container orchestration - >>> Requires domain changes
 ├── deploy/docker/
-│   ├── local_settings.py           # dev-v0.1.1 - Django settings (HLS, 480p)
-│   └── nginx
-│       └── mediacms.conf           # dev-v0.1.0 - Nginx config (no CORS)  - may be deprecated <<<
-│   └── init-scriptsh                      
-│       └── remove-nginx-cors.sh    # dev-v0.1.0 Startup script - may be deprecated <<<
+│   └── Cocal_settings.py           # dev-v0.1.1 - Django settings (HLS, 480p)
 ├── scripts/
 │   ├── docker-healthcheck.sh       # dev-v4.4.0 - changes the nginx defaults for CORS serving and encoding profiles
-│   ├── init_validate_storage.sh    # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
+│   └── Cinit_validate_storage.sh    # dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 ├── caddy/
 │   └── Caddyfile                   # dev-v0.2.4 - Reverse proxy config - >>> Requires domain changes
 │   └── caddy                              
