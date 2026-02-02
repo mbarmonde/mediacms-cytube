@@ -22,13 +22,13 @@
 #####
 
 # Stored at: /mediacms/deploy/docker/local_settings.py
-# Find Replace dev.420grindhouseserver.com
-# Find Replace 420 Grindhouse Dev Server
+# Find Replace YOUR.DOMAIN.COM
+# Find Replace YOUR SERVER DESCRIPTION
 
 import os
 
-FRONTEND_HOST = os.getenv('FRONTEND_HOST', 'https://dev.420grindhouseserver.com')  # HTTPS required
-PORTAL_NAME = os.getenv('PORTAL_NAME', '420 Grindhouse Dev Server')
+FRONTEND_HOST = os.getenv('FRONTEND_HOST', 'https://YOUR.DOMAIN.COM')  # HTTPS required
+PORTAL_NAME = os.getenv('PORTAL_NAME', 'YOUR SERVER DESCRIPTION')
 SECRET_KEY = os.getenv('SECRET_KEY', 'ma!s3^b-cw!f#7s6s0m3*jx77a@riw(7701**(r=ww%w!2+yk2')
 REDIS_LOCATION = os.getenv('REDIS_LOCATION', 'redis://redis:6379/1')
 
@@ -62,7 +62,7 @@ MP4HLS_COMMAND = "/home/mediacms.io/bento4/bin/mp4hls"
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Custom Settings for CyTube via cms/settings.py
-PORTAL_DESCRIPTION = "420 Grindhouse Dev Server"
+PORTAL_DESCRIPTION = "YOUR SERVER DESCRIPTION"
 TIME_ZONE = "America/Los_Angeles"
 DEFAULT_THEME = "dark"
 REGISTER_ALLOWED = False
