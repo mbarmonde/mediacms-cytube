@@ -1,5 +1,7 @@
-# dev-v0.2.4
+# dev-v0.2.5
+
 #####
+# v0.2.5 - Better search logic for YOUR.DOMAIN.COM counts
 # v0.2.4 - Fixed TLS error for Caddy 2.10.2
 #   - Removed tls_timeout (not needed for http:// backends)
 #   - Only using: read_timeout, write_timeout, response_header_timeout, dial_timeout
@@ -7,7 +9,7 @@
 #####
 
 # Stored at: /mediacms/caddy/Caddyfile
-# Find Replace YOUR.DOMAIN.COM
+# Find Replace YOUR.DOMAIN.COM, 1ea
 
 YOUR.DOMAIN.COM {
     # Handle HLS playlists (.m3u8 files)

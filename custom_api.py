@@ -1,6 +1,7 @@
-# dev-v0.3.0
+# dev-v0.3.1
 
 #####
+# v0.3.1 - Better search logic for YOUR.DOMAIN.COM counts
 # v0.3.0 - Added encoding status API endpoint
 # - New get_encoding_status function for real-time encoding progress
 # - Added Encoding model import
@@ -14,7 +15,7 @@
 #####
 
 # Stored at: /mediacms/cms/custom_api.py
-# Find Replace YOUR.DOMAIN.COM
+# Find Replace YOUR.DOMAIN.COM, 1ea
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny

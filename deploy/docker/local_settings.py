@@ -1,6 +1,7 @@
-# dev-v0.1.1
+# dev-v0.1.2
 
 #####
+# v0.1.2 - Better search logic for YOUR.DOMAIN.COM and YOUR SERVER DESCRIPTION counts
 # v0.1.1 - Chunk fixes for uploads
 # -  UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
 #  - FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
@@ -22,8 +23,8 @@
 #####
 
 # Stored at: /mediacms/deploy/docker/local_settings.py
-# Find Replace YOUR.DOMAIN.COM
-# Find Replace YOUR SERVER DESCRIPTION
+# Find Replace YOUR.DOMAIN.COM, 1ea
+# Find Replace YOUR SERVER DESCRIPTION, 2ea
 
 import os
 
