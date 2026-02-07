@@ -19,6 +19,11 @@
   - **Block Storage Integration** - All media stored on with proper volume mounts (required at /mnt/ebs universally)
   - **Automated Container Health** - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
   - **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
+
+  ## Plug in!
+
+  - [Show and tell discussion here](https://github.com/mediacms-io/mediacms/discussions/1486) on how you are using the project
+  - Add functionality, work on a PR, fix an issue!
   
   ## MediaCMS for CyTube Get Started
   
@@ -122,11 +127,6 @@ Container: /home/mediacms.io/mediacms/media_files/ (mounted from above via docke
   MediaCMS is a modern, fully featured open source video and media CMS. It is developed to meet the needs of modern web platforms for viewing and sharing media. It can be used to build a small to medium video and media portal within minutes.
 
   It is built mostly using the modern stack Django + React and includes a REST API.
-
-  ## (TBD) Will be featured at some point at
-  - [Show and tell](https://github.com/mediacms-io/mediacms/discussions/categories/show-and-tell) how you are using the project
-  - Star the project
-  - Add functionality, work on a PR, fix an issue!
 
   ## Contact
 
