@@ -79,6 +79,7 @@ nano /mediacms/caddy/Caddyfile
 | Docker Compose | Latest | Container orchestration |
 
   ## MediaCMS for CyTube Change-File List
+  D = Domain, Email or Password change required
   
 ```
 /mediacms/
