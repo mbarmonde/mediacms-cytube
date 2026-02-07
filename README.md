@@ -1,4 +1,4 @@
-  # MediaCMS for CyTube (MediaCMS 7.2)
+  # MediaCMS for CyTube (MediaCMS 7.7)
   
   ## What's this for?
   
@@ -71,7 +71,7 @@ nano /mediacms/caddy/Caddyfile
 
   | Component | Version | Purpose |
 |-----------|---------|---------|
-| MediaCMS | 7.2 | Video management & encoding platform |
+| MediaCMS | 7.7 | Video management & encoding platform |
 | Celery | Latest | Distributed task queue system that handles asynchronous background processing for media operations.
 | Caddy | 2.10.2 | Reverse proxy with HLS optimization |
 | PostgreSQL | 17.2 | Database |
