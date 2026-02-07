@@ -1,4 +1,6 @@
-  # MediaCMS for CyTube (MediaCMS 7.2)
+  # Dev-Branch MediaCMS for CyTube (MediaCMS 7.6)
+  
+  [Main branch that's validated for MediaCMS 7.2 is here](https://github.com/mbarmonde/mediacms-cytube/tree/main)
   
   ## What's this for?
   
