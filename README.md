@@ -67,7 +67,7 @@ nano /mediacms/caddy/Caddyfile
  ```
  
 
-  ## MediaCMS for CyTube Stack
+  ## MediaCMS for CyTube Stack 
 
   | Component | Version | Purpose |
 |-----------|---------|---------|
