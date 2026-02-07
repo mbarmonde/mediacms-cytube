@@ -1,4 +1,12 @@
   # MediaCMS for CyTube (MediaCMS 7.2)
+  
+  ## What's this for?
+  
+  [CyTube](https://github.com/calzoneman/sync) is a Reddit-like series of user-registered channels where connected viewers watch videos from different video hosts (e.g., YouTube, Twitch, Customer server) and the playback is synchronized for all the viewers in the channel. Each channel has a playlist where users can queue up videos to play, as well as an integrated chatroom for discussion. Channel capabilities includes owners and moderators in various roles with emotes (gifs), and CSS customization.
+  
+  [MediaCMS](https://github.com/mediacms-io/mediacms) provides a private repository for video content used as a YouTube replacement to stream, manage, and encode videos with RBAC and various features.
+  
+  **MediaCMS for CyTube** modifies MediaCMS for instant sharing of video content to CyTube via an accepted .JSON file for CyTube playlists. In one click, an encoded video in MediaCMS can be copied and pasted in a play list to start showing.
 
   ## MediaCMS for CyTube Key Changes
 
@@ -6,8 +14,9 @@
   - **HLS Streaming at 480p** - MediaCMS encodes all uploads to H.264 480p HLS with 6-second segments using veryfast preset
   - **CyTube Integration** - Custom API generates CyTube-compatible JSON manifests with application/x-mpegURL content type per [CyTube best practices](https://github.com/calzoneman/sync/blob/3.0/docs/custom-media.md)
   - **Real-time Encoding Status Widget** - JavaScript widget (v1.7) displays encoding progress with ETA calculation, auto-updates every 3 seconds, shows "Ready for Export to CyTube!" when complete
+  - **Automated Encoding Profile Setup** - Enables only 480p and Preview encoding profiles, disabling the rest; require initial docker compose start / stop; includes lock mechanism for incremental changes)
   - **One-click Export Button** - Floating button on video pages copies CyTube manifest URL to clipboard
-  - **Block Storage Integration** - All media stored on with proper volume mounts
+  - **Block Storage Integration** - All media stored on with proper volume mounts (required at /mnt/ebs universally)
   - **Automated Container Health** - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
   - **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
   
