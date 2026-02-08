@@ -1,6 +1,11 @@
-# dev-v0.3.2
+# dev-v0.3.5
 
 #####
+# v0.3.5 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
+#   - Language initialization available via: bash /mediacms/scripts/init_subtitle_languages.sh
+#   - Run once during initial setup or when adding new deployment
+# v0.3.4 - Removed the new CORS volume mount
+# v0.3.3 - Added a line to remove CORS via file replacement for new NGINX config; added comments
 # v0.3.2 - fixed no longer existent path issues
 # v0.3.1 - Reconfigured for a .env file for clarity
 #   - Refactored into variables for Admin Credentials, Database Configuration, Storage Paths, Image Versions, Timezone, and Deployment Replicas
@@ -46,8 +51,8 @@ services:
       replicas: ${WEB_REPLICAS}
     volumes:
       - ./:/home/mediacms.io/mediacms/
-      #- ./deploy/docker/nginx/mediacms.conf:/etc/nginx/sites-enabled/default
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
+      # MediaCMS for CyTube - Runs a key healthcheck to remove duplicate CORS and set encoding profiles
       - ./scripts/docker-healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
     environment:
       ENABLE_CELERY_BEAT: 'no'

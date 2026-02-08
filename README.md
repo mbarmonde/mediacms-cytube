@@ -13,14 +13,48 @@
   ## MediaCMS for CyTube Key Changes
 
   This fork of MediaCMS features integration for CyTube, including:
-  - **HLS Streaming at 480p** - MediaCMS encodes all uploads to H.264 480p HLS with 6-second segments using veryfast preset
-  - **CyTube Integration** - Custom API generates CyTube-compatible JSON manifests with application/x-mpegURL content type per [CyTube best practices](https://github.com/calzoneman/sync/blob/3.0/docs/custom-media.md)
-  - **Real-time Encoding Status Widget** - JavaScript widget (v1.7) displays encoding progress with ETA calculation, auto-updates every 3 seconds, shows "Ready for Export to CyTube!" when complete
-  - **Automated Encoding Profile Setup** - Enables only 480p and Preview encoding profiles, disabling the rest; require initial docker compose start / stop; includes lock mechanism for incremental changes)
-  - **One-click Export Button** - Floating button on video pages copies CyTube manifest URL to clipboard
-  - **Block Storage Integration** - All media stored on with proper volume mounts (required at /mnt/ebs universally)
-  - **Automated Container Health** - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates only h264-480 + preview encoding profiles on every restart
-  - **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
+- **Adaptive Bitrate streaming** - Enabled 480p, 720p, and 1080p encoding with adaptive bitrate streaming for CyTube. MediaCMS encodes all uploads to H.264 HLS with 6-second segments using veryfast preset
+- **Smart Encode** - Dynamically enable/disable encoding profiles based on source video resolution to prevent unnecessary upscaling and optimize storage/CPU usage.
+- **CyTube Integration** - Custom API generates CyTube-compatible JSON manifests with application/x-mpegURL content type per CyTube best practices: https://github.com/calzoneman/sync/blob/3.0/docs/custom-media.md
+- **Real-time Encoding Status Widget** - JavaScript widget (v1.7) displays encoding progress with ETA calculation, auto-updates every 3 seconds, shows "Ready for Export to CyTube!" when complete
+- **Automated Encoding Profile Setup** - Enables only 480p, 720p, 1080p and Preview encoding profiles, disabling the rest, but uses Smart Encode to save space  
+- **One-click Export Button** - Floating button on video pages copies CyTube manifest URL to clipboard
+- **Block Storage Integration** - All media stored on with proper volume mounts (required at /mnt/ebs universally)
+- **Automated Container Health** - Healthcheck script automatically configures nginx (removes CORS conflicts, sets upload timeouts) and activates encoding profiles on every docker restart/recreation
+- **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
+- **Here is a result of a .json example file** for CyTube that's publicly accessibly at: [https://dev02.420grindhouseserver.com/media/custom/(manifest).json](https://dev02.420grindhouseserver.com/media/custom/(manifest).json) which I can put into CyTube via Caddy:
+
+```
+{
+  "title": "The Burbs 1989 REMASTERED 1080p BluRay HEVC x265 BONE.mkv",
+  "duration": 6103,
+  "live": false,
+  "thumbnail": "https://dev02.420grindhouseserver.com/media/original/thumbnails/user/dev02admin/68a05ca4e3e64faa8f2f55adeda5027c_EgAC9L1.TheBurbs1989REMASTERED1080pBluRayHEVCx265BONE.mkv.jpg",
+  "sources": [
+    {
+      "url": "https://dev02.420grindhouseserver.com/media/hls/68a05ca4e3e64faa8f2f55adeda5027c/master.m3u8",
+      "contentType": "application/x-mpegURL",
+      "quality": 480
+    },
+    {
+      "url": "https://dev02.420grindhouseserver.com/media/hls/68a05ca4e3e64faa8f2f55adeda5027c/master.m3u8",
+      "contentType": "application/x-mpegURL",
+      "quality": 720
+    },
+    {
+      "url": "https://dev02.420grindhouseserver.com/media/hls/68a05ca4e3e64faa8f2f55adeda5027c/master.m3u8",
+      "contentType": "application/x-mpegURL",
+      "quality": 1080
+    }
+  ],
+  "textTracks": [],
+  "meta": {
+    "description": "",
+    "streaming_method": "hls_adaptive_3_resolutions",
+    "media_hash": "68a05ca4e3e64faa8f2f55adeda5027c"
+  }
+}
+```
 
   ## Plug in!
 

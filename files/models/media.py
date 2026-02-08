@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+
+# dev-v1.0.0
+
+#####
+# v1.0.0 - Initial release
+#####
+
+# Stored at: /mediacms/files/models/media.py
+
 import glob
 import json
 import logging
@@ -548,6 +558,29 @@ class Media(models.Model):
         tasks.produce_sprite_from_video.delay(self.friendly_token)
         return True
 
+    def get_smart_encode_profiles(self):
+        """Smart Encode: Select profiles based on source resolution"""
+        import logging
+        source_height = self.video_height or 1080
+
+        if source_height <= 360:
+            max_res, min_res = 480, 480
+            logging.info(f"Smart Encode [{self.friendly_token}]: {source_height}p -> 480p (upscale)")
+        elif source_height <= 480:
+            max_res, min_res = 480, 0
+            logging.info(f"Smart Encode [{self.friendly_token}]: {source_height}p -> 480p")
+        elif source_height <= 720:
+            max_res, min_res = 720, 0
+            logging.info(f"Smart Encode [{self.friendly_token}]: {source_height}p -> 480p, 720p")
+        else:
+            max_res, min_res = 1080, 0
+            logging.info(f"Smart Encode [{self.friendly_token}]: {source_height}p -> 480p, 720p, 1080p")
+
+        profiles = EncodeProfile.objects.filter(active=True, resolution__lte=max_res)
+        if min_res > 0:
+            profiles = profiles.filter(resolution__gte=min_res)
+        return profiles
+
     def encode(self, profiles=[], force=True, chunkize=True):
         """Start video encoding tasks
         Create a task per EncodeProfile object, after checking height
@@ -556,7 +589,8 @@ class Media(models.Model):
         """
 
         if not profiles:
-            profiles = EncodeProfile.objects.filter(active=True)
+            # Use Smart Encode logic
+            profiles = self.get_smart_encode_profiles()
         profiles = list(profiles)
 
         from .. import tasks

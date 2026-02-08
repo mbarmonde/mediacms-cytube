@@ -1,6 +1,7 @@
-# dev-v0.1.2
+# dev-v0.1.3
 
 #####
+# v0.1.3 -Changed and added to MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 # v0.1.2 - Better search logic for YOUR.DOMAIN.COM and YOUR SERVER DESCRIPTION counts
 # v0.1.1 - Chunk fixes for uploads
 # -  UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
@@ -87,7 +88,7 @@ DO_NOT_TRANSCODE_VIDEO = False
 
 # Encode only 480p to save storage and CPU resources
 # With 140GB storage and 100+ users, single quality is optimal
-MINIMUM_RESOLUTIONS_TO_ENCODE = [480]
+MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 
 # Use veryfast preset for CPU efficiency (reduces CPU usage ~35%)
 # veryfast is recommended for streaming; medium and slower use too much CPU

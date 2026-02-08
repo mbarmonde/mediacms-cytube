@@ -1,6 +1,10 @@
-# dev-v0.2.5
+# dev-v0.3.0
 
 #####
+# v0.3.0 - SUBTITLE CORS SUPPORT
+#   - Added .vtt (WebVTT subtitle) file handler with CORS headers
+#   - Required for browsers to load cross-origin subtitle files
+#   - Supports CyTube textTracks integration
 # v0.2.5 - Better search logic for YOUR.DOMAIN.COM counts
 # v0.2.4 - Fixed TLS error for Caddy 2.10.2
 #   - Removed tls_timeout (not needed for http:// backends)
@@ -11,7 +15,7 @@
 # Stored at: /mediacms/caddy/Caddyfile
 # Find Replace YOUR.DOMAIN.COM, 1ea
 
-YOUR.DOMAIN.COM {
+dev02.420grindhouseserver.com {
     # Handle HLS playlists (.m3u8 files)
     @hls_playlists {
         path *.m3u8
@@ -34,7 +38,7 @@ YOUR.DOMAIN.COM {
             Cache-Control "public, max-age=10"
         }
     }
-    
+
     # Handle HLS segments (.ts files)
     @hls_segments {
         path *.ts
@@ -57,7 +61,25 @@ YOUR.DOMAIN.COM {
             Cache-Control "public, max-age=31536000"
         }
     }
-    
+
+    # Handle WebVTT subtitle files (.vtt)
+    @subtitle_files {
+        path *.vtt
+    }
+    handle @subtitle_files {
+        reverse_proxy http://media_cms {
+            flush_interval -1
+        }
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+            Access-Control-Allow-Headers "Range, Content-Type"
+            Access-Control-Expose-Headers "Content-Length, Content-Range"
+            Content-Type "text/vtt; charset=utf-8"
+            Cache-Control "public, max-age=3600"
+        }
+    }
+
     # Handle JSON manifests
     @json_manifests {
         path *.json
@@ -72,24 +94,24 @@ YOUR.DOMAIN.COM {
             Cache-Control "public, max-age=3600"
         }
     }
-    
+
     # Handle all other requests (including uploads and processing)
     handle {
         reverse_proxy http://media_cms {
             flush_interval -1
-            
+
             # Extended timeouts for large file uploads and processing
             transport http {
                 # Wait 1 hour for backend to send response
                 read_timeout 3600s
-                
+
                 # Wait 1 hour to send request to backend
                 write_timeout 3600s
-                
+
                 # Wait 1 hour for response headers from backend
                 # CRITICAL: Allows MediaCMS to process 8GB files
                 response_header_timeout 3600s
-                
+
                 # Wait 30 seconds to establish connection
                 dial_timeout 30s
             }
