@@ -15,7 +15,7 @@
 # Stored at: /mediacms/caddy/Caddyfile
 # Find Replace YOUR.DOMAIN.COM, 1ea
 
-dev02.420grindhouseserver.com {
+YOUR.DOMAIN.COM {
     # Handle HLS playlists (.m3u8 files)
     @hls_playlists {
         path *.m3u8

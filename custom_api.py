@@ -26,7 +26,7 @@
 #####
 
 # Stored at: /mediacms/cms/custom_api.py
-# Find Replace YOUR.DOMAIN.COM, 2ea
+# Find Replace YOUR.DOMAIN.COM, 1ea
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -83,7 +83,7 @@ def generate_cytube_manifest(request, friendly_token):
             hls_dir_name = os.path.basename(hls_dir_found)
 
             # Build the HTTPS URL for the master playlist
-            hls_url = f"https://dev02.420grindhouseserver.com/media/hls/{hls_dir_name}/master.m3u8"
+            hls_url = f"https://YOUR.DOMAIN.COM/media/hls/{hls_dir_name}/master.m3u8"
             print(f"   🎬 HLS URL: {hls_url}")
 
             # Detect which resolutions were actually encoded

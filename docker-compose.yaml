@@ -1,6 +1,8 @@
-# dev-v0.3.5
+# dev-v0.3.6
 
 #####
+# v0.3.6 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
+#   - added 'container_name' for predictability as an environmental variable to each service except 'migrations' via .env
 # v0.3.5 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
 #   - Language initialization available via: bash /mediacms/scripts/init_subtitle_languages.sh
 #   - Run once during initial setup or when adding new deployment
@@ -46,7 +48,8 @@ services:
     image: mediacms/mediacms:${MEDIACMS_VERSION}
     networks:
       - reverse_proxy
-    container_name: media_cms
+    # DO NOT CHANGE WEB_CONTAINER_NAME from anything but media_cms because of hardcoded MediaCMS conflicts
+    container_name: ${WEB_CONTAINER_NAME}
     deploy:
       replicas: ${WEB_REPLICAS}
     volumes:
@@ -72,6 +75,7 @@ services:
     image: mediacms/mediacms:${MEDIACMS_VERSION}
     networks:
       - reverse_proxy
+    container_name: ${CELERY_BEAT_CONTAINER_NAME}
     volumes:
       - ./:/home/mediacms.io/mediacms/
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
@@ -88,8 +92,9 @@ services:
     image: mediacms/mediacms:${MEDIACMS_VERSION}
     networks:
       - reverse_proxy
+    container_name: ${CELERY_WORKER_CONTAINER_NAME}
     deploy:
-      replicas: ${CELERY_REPLICAS}
+      replicas: ${CELERY_WORKER_REPLICAS}
     volumes:
       - ./:/home/mediacms.io/mediacms/
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
@@ -105,6 +110,7 @@ services:
     image: postgres:${POSTGRES_VERSION}
     networks:
       - reverse_proxy
+    container_name: ${DB_CONTAINER_NAME}
     volumes:
       - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data/
     restart: always
@@ -123,6 +129,7 @@ services:
     image: redis:${REDIS_VERSION}
     networks:
       - reverse_proxy
+    container_name: ${REDIS_CONTAINER_NAME}
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
@@ -131,10 +138,10 @@ services:
       retries: 3
 
   caddy:
-    container_name: caddy_reverse_proxy
     image: caddy:${CADDY_VERSION}
     networks:
       - reverse_proxy
+    container_name: ${CADDY_CONTAINER_NAME}
     ports:
       - "80:80"
       - "443:443"
