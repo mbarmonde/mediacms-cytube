@@ -25,29 +25,29 @@
 - **Large File Upload Support** - Handles 2-8GB files with 10GB max size, 2-hour timeout for chunk finalization
 
  ## Example JSON Payload
-**Here is a result of a .json example file** encoded dynamically based on native resoltions for CyTube that's publicly accessibly at: [https://dev02.420grindhouseserver.com/media/custom/(manifest).json](https://dev02.420grindhouseserver.com/media/custom/(manifest).json) which I can play in CyTube via Caddy to MediaCMS:
+**Here is a result of a .json example file** encoded dynamically based on native resoltions for CyTube that's publicly accessibly at: https://YOUR.DOMAIN.COM/media/custom/(manifest).json which I can play in CyTube via Caddy to MediaCMS:
 
 ```
 {
   "title": "Moonraker.(1979)",
   "duration": 7589,
   "live": false,
-  "thumbnail": "https://dev02.420grindhouseserver.com/media/original/thumbnails/user/superadmin02/979a61dd99a14e8f9924d3857f2ea422_xjNM67n.Moonraker.1979.mkv.jpg",
+  "thumbnail": "https://YOUR.DOMAIN.COM/media/original/thumbnails/user/superadmin02/979a61dd99a14e8f9924d3857f2ea422_xjNM67n.Moonraker.1979.mkv.jpg",
   "sources": [
     {
-      "url": "https://dev02.420grindhouseserver.com/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
+      "url": "https://YOUR.DOMAIN.COM/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
       "contentType": "application/x-mpegURL",
       "quality": 480
     },
     {
-      "url": "https://dev02.420grindhouseserver.com/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
+      "url": "https://YOUR.DOMAIN.COM/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
       "contentType": "application/x-mpegURL",
       "quality": 720
     }
   ],
   "textTracks": [
     {
-      "url": "https://dev02.420grindhouseserver.com/media/original/subtitles/user/superadmin02/Moonraker.1979.720p.BRRip.x264.AAC-ViSiON.srt",
+      "url": "https://YOUR.DOMAIN.COM/media/original/subtitles/user/superadmin02/Moonraker.1979.720p.BRRip.x264.AAC-ViSiON.srt",
       "contentType": "text/vtt",
       "name": "English"
     }
