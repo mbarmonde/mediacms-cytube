@@ -36,7 +36,8 @@
   **MediaCMS for CyTube** modifies MediaCMS for instant sharing of video content to CyTube via an accepted .JSON file for CyTube playlists. In one click, an encoded video in MediaCMS can be copied and pasted in a play list to start showing.
 
   # MediaCMS for CyTube Quick Start
-  Note: The default is /mnt/ebs/mediacms_media. If using a different path, update MEDIA_FILES_PATH in .env
+  Note: The default is /mnt/ebs/mediacms_media. If using a different path, update MEDIA_FILES_PATH in .env; the database is stored at /postgres_data; removing these files and the /mediacms directory completely cleans the server
+  
   
   1. Clone the repo branch of your choice to a root folder called /mediacms
   
