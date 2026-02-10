@@ -1,26 +1,32 @@
-# dev-v0.3.7
+# dev-v0.3.9
 
 #####
+# v0.3.9 - CRITICAL FIX: Pass DOMAIN to all Python containers
+# - Added DOMAIN, CYTUBE_DESCRIPTION, CYTUBE_ORGANIZATION to web, celery_beat, celery_worker
+# - Fixed OSError: Missing required environment variable 'DOMAIN' in .env
+# - Required for custom_api.py and Local_settings.py to function
+# v0.3.8 - added 'DOMAIN' for injecting the domain into the Caddyfile via .env
 # v0.3.7 - added 'NETWORK_NAME' for predictability as an environmental variable for naming the network via .env
 # v0.3.6 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
-#   - added 'container_name' for predictability as an environmental variable to each service except 'migrations' via .env
+# - added 'container_name' for predictability as an environmental variable to each service except 'migrations' via .env
 # v0.3.5 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
-#   - Language initialization available via: bash /mediacms/scripts/init_subtitle_languages.sh
-#   - Run once during initial setup or when adding new deployment
+# - Language initialization available via: bash /mediacms/scripts/init_subtitle_languages.sh
+# - Run once during initial setup or when adding new deployment
 # v0.3.4 - Removed the new CORS volume mount
 # v0.3.3 - Added a line to remove CORS via file replacement for new NGINX config; added comments
 # v0.3.2 - fixed no longer existent path issues
 # v0.3.1 - Reconfigured for a .env file for clarity
-#   - Refactored into variables for Admin Credentials, Database Configuration, Storage Paths, Image Versions, Timezone, and Deployment Replicas
+# - Refactored into variables for Admin Credentials, Database Configuration, Storage Paths, Image Versions, Timezone, and Deployment Replicas
 # v0.3.0 - AUTOMATED: Added healthcheck to auto-remove nginx CORS headers
-#   - Healthcheck runs startup script on every container start
-#   - Automatically removes duplicate CORS headers
-#   - No manual intervention needed after restarts
+# - Healthcheck runs startup script on every container start
+# - Automatically removes duplicate CORS headers
+# - No manual intervention needed after restarts
 # v0.2.2 - Clean architecture with proper 8TB mounts
 # v0.2.1 - Removed :ro flag from nginx mount
 #####
 
 services:
+
   migrations:
     image: mediacms/mediacms:${MEDIACMS_VERSION}
     networks:
@@ -37,6 +43,10 @@ services:
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # Pass DOMAIN for Python imports
+      DOMAIN: ${DOMAIN}
+      CYTUBE_DESCRIPTION: ${CYTUBE_DESCRIPTION}
+      CYTUBE_ORGANIZATION: ${CYTUBE_ORGANIZATION}
     command: "./deploy/docker/prestart.sh"
     restart: on-failure
     depends_on:
@@ -63,6 +73,10 @@ services:
       ENABLE_CELERY_SHORT: 'no'
       ENABLE_CELERY_LONG: 'no'
       ENABLE_MIGRATIONS: 'no'
+      # CRITICAL: Pass DOMAIN to custom_api.py and Local_settings.py
+      DOMAIN: ${DOMAIN}
+      CYTUBE_DESCRIPTION: ${CYTUBE_DESCRIPTION}
+      CYTUBE_ORGANIZATION: ${CYTUBE_ORGANIZATION}
     depends_on:
       - migrations
     healthcheck:
@@ -86,6 +100,10 @@ services:
       ENABLE_CELERY_SHORT: 'no'
       ENABLE_CELERY_LONG: 'no'
       ENABLE_MIGRATIONS: 'no'
+      # CRITICAL: Pass DOMAIN for Python imports
+      DOMAIN: ${DOMAIN}
+      CYTUBE_DESCRIPTION: ${CYTUBE_DESCRIPTION}
+      CYTUBE_ORGANIZATION: ${CYTUBE_ORGANIZATION}
     depends_on:
       - redis
 
@@ -104,6 +122,10 @@ services:
       ENABLE_NGINX: 'no'
       ENABLE_CELERY_BEAT: 'no'
       ENABLE_MIGRATIONS: 'no'
+      # CRITICAL: Pass DOMAIN for Python imports
+      DOMAIN: ${DOMAIN}
+      CYTUBE_DESCRIPTION: ${CYTUBE_DESCRIPTION}
+      CYTUBE_ORGANIZATION: ${CYTUBE_ORGANIZATION}
     depends_on:
       - migrations
 
@@ -147,6 +169,9 @@ services:
       - "80:80"
       - "443:443"
     restart: always
+    environment:
+      # Pass DOMAIN from .env to Caddy for Caddyfile variable substitution
+      - DOMAIN=${DOMAIN}
     volumes:
       - ./caddy:/data/
       - ./caddy:/config/

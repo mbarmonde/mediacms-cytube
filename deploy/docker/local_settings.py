@@ -1,15 +1,21 @@
-# dev-v0.1.3
+# dev-v0.2.0
 
 #####
-# v0.1.3 -Changed and added to MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
+# v0.2.0 - CENTRALIZED CONFIGURATION
+# - Replaced hardcoded domain with os.environ.get('DOMAIN')
+# - FRONTEND_HOST now constructed as https://{DOMAIN}
+# - PORTAL_NAME and PORTAL_DESCRIPTION now use CYTUBE_DESCRIPTION from .env
+# - Added environment variable validation
+# - Removed manual Find/Replace requirement for domain and description
+# v0.1.3 - Changed and added to MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 # v0.1.2 - Better search logic for YOUR.DOMAIN.COM and YOUR SERVER DESCRIPTION counts
 # v0.1.1 - Chunk fixes for uploads
-# -  UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
-#  - FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
-#  - DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
-#  - UPLOAD_CHUNKS = True
-#  - UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024  # 50MB chunks
-#  - CHUNK_UPLOAD_TIMEOUT = 7200  # 2 hours
+#   - UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024 # 10GB
+#   - FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024 # 100MB
+#   - DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+#   - UPLOAD_CHUNKS = True
+#   - UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024 # 50MB chunks
+#   - CHUNK_UPLOAD_TIMEOUT = 7200 # 2 hours
 # v0.1.0 - MAJOR UPDATE: Enabled HLS streaming for CyTube
 #   - Set HLS_ENABLE = True (CyTube supports HLS via application/x-mpegURL)
 #   - Set HLS_TIME = 6 (standard 6-second segments)
@@ -24,13 +30,44 @@
 #####
 
 # Stored at: /mediacms/deploy/docker/local_settings.py
-# Find Replace YOUR.DOMAIN.COM, 1ea
-# Find Replace YOUR SERVER DESCRIPTION, 2ea
+# Configuration now centralized in .env file (DOMAIN, CYTUBE_DESCRIPTION)
 
 import os
 
-FRONTEND_HOST = os.getenv('FRONTEND_HOST', 'https://YOUR.DOMAIN.COM')  # HTTPS required
-PORTAL_NAME = os.getenv('PORTAL_NAME', 'YOUR SERVER DESCRIPTION')
+# ============================================
+# ENVIRONMENT VARIABLE VALIDATION
+# ============================================
+# Validate required environment variables on module load
+DOMAIN = os.environ.get('DOMAIN')
+
+if not DOMAIN:
+    raise EnvironmentError(
+        "❌ CRITICAL: Missing required environment variable 'DOMAIN' in .env\n"
+        "   Please configure DOMAIN in your .env file before starting MediaCMS.\n"
+        "   Example: DOMAIN=dev02.420grindhouseserver.com\n"
+        "   See .env file MANUAL CONFIGURATION SECTION."
+    )
+
+# Validate domain format (basic check)
+if DOMAIN.startswith('http://') or DOMAIN.startswith('https://'):
+    raise ValueError(
+        f"❌ DOMAIN should not include protocol (http:// or https://)\n"
+        f"   Current value: {DOMAIN}\n"
+        f"   Correct format: example.com or subdomain.example.com"
+    )
+
+print(f"✅ Local settings initialized with DOMAIN: {DOMAIN}")
+
+# ============================================
+# CORE DJANGO SETTINGS
+# ============================================
+# Construct FRONTEND_HOST from DOMAIN (HTTPS-only project)
+FRONTEND_HOST = os.getenv('FRONTEND_HOST', f'https://{DOMAIN}')
+
+# Load portal name/description from environment
+CYTUBE_DESCRIPTION = os.environ.get('CYTUBE_DESCRIPTION', 'Custom MediaCMS streaming server')
+PORTAL_NAME = os.getenv('PORTAL_NAME', CYTUBE_DESCRIPTION)
+
 SECRET_KEY = os.getenv('SECRET_KEY', 'ma!s3^b-cw!f#7s6s0m3*jx77a@riw(7701**(r=ww%w!2+yk2')
 REDIS_LOCATION = os.getenv('REDIS_LOCATION', 'redis://redis:6379/1')
 
@@ -59,12 +96,14 @@ CACHES = {
 # CELERY STUFF
 BROKER_URL = REDIS_LOCATION
 CELERY_RESULT_BACKEND = BROKER_URL
-MP4HLS_COMMAND = "/home/mediacms.io/bento4/bin/mp4hls"
 
+MP4HLS_COMMAND = "/home/mediacms.io/bento4/bin/mp4hls"
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Custom Settings for CyTube via cms/settings.py
-PORTAL_DESCRIPTION = "YOUR SERVER DESCRIPTION"
+# ============================================
+# CUSTOM SETTINGS FOR CYTUBE
+# ============================================
+PORTAL_DESCRIPTION = CYTUBE_DESCRIPTION
 TIME_ZONE = "America/Los_Angeles"
 DEFAULT_THEME = "dark"
 REGISTER_ALLOWED = False
@@ -80,14 +119,16 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 USERS_CAN_SELF_REGISTER = False
 GLOBAL_LOGIN_REQUIRED = True
 
-# ===== VIDEO ENCODING SETTINGS =====
+# ============================================
+# VIDEO ENCODING SETTINGS
+# ============================================
 # These settings normalize all uploads to a consistent streaming format
 
 # CRITICAL: Enable transcoding for HLS generation
 DO_NOT_TRANSCODE_VIDEO = False
 
-# Encode only 480p to save storage and CPU resources
-# With 140GB storage and 100+ users, single quality is optimal
+# Encode 480p, 720p, and 1080p for adaptive bitrate streaming
+# Smart encode will skip resolutions higher than source resolution
 MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 
 # Use veryfast preset for CPU efficiency (reduces CPU usage ~35%)
@@ -109,7 +150,9 @@ FFMPEG_AUDIO_CODEC = "aac"
 # Audio bitrate (128k is standard for streaming)
 FFMPEG_AUDIO_BITRATE = "128k"
 
-# ===== HLS STREAMING SETTINGS =====
+# ============================================
+# HLS STREAMING SETTINGS
+# ============================================
 # Enable HLS for adaptive streaming with segment-based delivery
 # CyTube supports HLS via application/x-mpegURL content type
 
@@ -125,14 +168,14 @@ HLS_TIME = 6
 # These ensure proper segment boundaries and playlist generation
 FFMPEG_HLS_FLAGS = "independent_segments"
 
+# ============================================
+# UPLOAD SETTINGS
+# ============================================
 # Maximum number of media a user can upload
 NUMBER_OF_MEDIA_USER_CAN_UPLOAD = 1000
 USER_CAN_TRANSCRIBE_VIDEO = True
 
-# Chunked upload timeout fix
-#CHUNK_UPLOAD_TIMEOUT = 7200
-#UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024
-#FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+# Chunked upload settings for large files (2-8GB videos)
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024

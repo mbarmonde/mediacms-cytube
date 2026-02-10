@@ -10,9 +10,81 @@
   
   **MediaCMS for CyTube** modifies MediaCMS for instant sharing of video content to CyTube via an accepted .JSON file for CyTube playlists. In one click, an encoded video in MediaCMS can be copied and pasted in a play list to start showing.
 
+  ## MediaCMS for CyTube Quick Start
+  
+  1. Clone the repo branch of your choice to a root folder called /mediacms
+  
+Main:
+```
+git clone https://github.com/mbarmonde/mediacms-cytube /mediacms
+```
+Dev:
+```
+git clone --branch dev https://github.com/mbarmonde/mediacms-cytube /mediacms
+```
+  
+  2. Modify .env, and find and replace the values below (note the optional inputs)
+ ```
+ nano .env
+ 
+# ============================================
+# DEPLOYMENT CONFIGURATION (HTTPS-ONLY)
+# ============================================
+DOMAIN=yourdomain.com                    # ← Your actual domain (no http:// or https://)
+
+# ============================================
+# ADMIN CREDENTIALS
+# ============================================
+ADMIN_USER=yourusername                  # ← Your admin username
+ADMIN_EMAIL=your@email.com               # ← Your admin email
+ADMIN_PASSWORD=YourSecurePassword123     # ← Your secure password (8+ chars)
+
+# ============================================
+# CYTUBE INTEGRATION METADATA (Optional)
+# ============================================
+# NOTE: Use quotes for values containing spaces
+CYTUBE_DESCRIPTION="Custom MediaCMS streaming server for CyTube integration"
+CYTUBE_ORGANIZATION="MediaCMS-CyTube"
+ ```
+ 
+ 3. Make the validate script executable and run the validation. If validation fails, fix the errors shown and run again.
+ ```
+ chmod +x validate-env.sh
+ ./validate-env.sh
+ ```
+ 
+ 4. Run the init script - starts the docker containers, and makes all scripts executable
+ ```
+ chmod +x cytube-execute-all-sh-and-storage-init.sh
+./cytube-execute-all-sh-and-storage-init.sh
+
+# This script:
+#✅ Validates your configuration
+#✅ Makes all scripts executable
+#✅ Initializes storage structure
+#✅ Starts Docker containers
+#✅ Waits for database to be ready
+#✅ Populates 20 subtitle languages
+ ```
+ 
+ 5. Check for running, healthly containers, and access your MediaCMS for CyTube site:
+ ```
+docker-compose ps
+
+#NAME                     STATUS
+#media_cms                Up (healthy)
+#mediacms_caddy           Up
+#mediacms_celery_beat     Up
+#mediacms_celery_worker   Up
+#mediacms_db              Up (healthy)
+#mediacms_redis           Up (healthy)
+ ```
+ 
+
   ## MediaCMS for CyTube Key Changes
 
   This fork of MediaCMS features integration for CyTube, including:
+- **All-in-One Setup Script** - Use .env file to set variables for the project and run a single script to get things going - Added 02/09/2026
 - **Subtitle Inclusion** - Via native MediaCMS processes and included with the JSON payload for CyTube - Added 02/09/2026
 - **Adaptive Bitrate streaming** - Enabled 480p, 720p, and 1080p encoding with adaptive bitrate streaming for CyTube. MediaCMS encodes all uploads to H.264 HLS with 6-second segments using veryfast preset - Added 02/06/2026
 - **Smart Encode** - Dynamically enable/disable encoding profiles based on source video resolution to prevent unnecessary upscaling and optimize storage/CPU usage. - Added 02/06/2026
@@ -65,59 +137,6 @@
 
   - MediaCMS for CyTube is part of the MediaCMS [Show and tell discussion here](https://github.com/mediacms-io/mediacms/discussions/1486) 
   - Add functionality, work on a PR, fix an issue!
-  
-  ## MediaCMS for CyTube Quick Start
-  
-  1. Clone the repo branch of your choice to a root folder called /mediacms
-  
-Main:
-```
-git clone https://github.com/mbarmonde/mediacms-cytube /mediacms
-```
-Dev:
-```
-git clone --branch dev https://github.com/mbarmonde/mediacms-cytube /mediacms
-```
-  
-  2. Modify then save each of the following files with your settings and info - also used for Let's Encrypt
-```
-# Find and Replace LOGON SUPERADMIN USERNAME, 1ea
-# Find and Replace LOGON SUPERADMIN EMAIL, 1ea
-# Find and Replace LOGON SUPERADMIN PASSWORD, 1ea
-nano /mediacms/.env
-```
-
-```
-# Find Replace YOUR.DOMAIN.COM, 1ea
-# Find Replace YOUR SERVER DESCRIPTION, 2ea
-nano /mediacms/deploy/docker/local_settings.py
-```
-
-```
-# Find Replace YOUR.DOMAIN.COM, 1ea 
-nano /mediacms/caddy/Caddyfile
-```
-
-```
-# Find Replace YOUR.DOMAIN.COM, 1ea
- nano /mediacms/custom_api.py
- ```
- 
- 3. Make the Init script executable
- ```
- chmod +x /mediacms/cytube-execute-all-sh-and-storage-init.sh
- ```
- 
- 4. Run the init script and pay attention to the output - starts the docker containers, and makes all scripts executable
- ```
-/mediacms/cytube-execute-all-sh-and-storage-init.sh
- ```
- 
- 5. Inject 20 languages for subtitle output (no docker restart required)
- ```
-/mediacms/scripts/init_subtitle_languages.sh
- ```
- 
 
   ## MediaCMS for CyTube Stack
 
@@ -131,38 +150,37 @@ nano /mediacms/caddy/Caddyfile
 | Docker Compose | Latest | Container orchestration |
 
   ## MediaCMS for CyTube Change-File List
-  D = Domain, Email or Password change required
+  Updated 2/09/2026
   
 ```
 /mediacms/
-├── .env                                   		D - # dev-v0.1.4 - .env for docker-compose.yaml - >>> User, Pass, Email changes, 1
-├── cytube-execute-all-sh-and-storage-init.sh  		# dev-v0.1.6 - Initializes storage file system, starts containers
-├── docker-compose.yaml                        		# dev-v0.3.7 - Container orchestration
-├── custom_api.py                         		D - # dev-v0.5.1 - CyTube manifest API - >>> Domain changes, 1
+├── .env                                   			# dev-v0.2.1 - .env for docker-compose.yaml and other files across the project
+├── cytube-execute-all-sh-and-storage-init.sh  		# dev-v0.3.0 - Initializes storage file system, starts containers, creates subtitle languages
+├── docker-compose.yaml                        		# dev-v0.3.8 - Container orchestration tied to .env for inputs
+├── custom_api.py                         			# dev-v0.6.0 - CyTube manifest API - tied to .env for inputs
 ├── custom_urls.py                          	    # dev-v0.1.3 - Custom API URLs
+├── validate-env.sh   	                            # dev-v1.0.0 - validates contents in the .env file
+├── caddy/
+│   └── Caddyfile                          		    # dev-v0.4.0 - Reverse proxy config - tied to .env for inputs
+│   └── *caddy*                              
+│       └── *certificates*             		        ###### OPTIONAL - where certificates go for caddy via Let's Encrypt if testing #####
+├── cms/
+│   └── urls.py                             	    # dev-v0.1.0 - Django URL routing
 ├── deploy/docker/
-│   └── Local_settings.py                  		D - # dev-v0.1.3 - Django settings (HLS, 480p) - >>> Domain / Descrip changes, 1
+│   └── Local_settings.py                  			# dev-v0.2.0 - Django settings (HLS, 480p) - tied to .env for inputs
 │   └── nginx_http_only.conf				  		# dev-v1.0.0 - large file timeouts, CORS removal
+├── files/models/
+│   └── media.py							   		# dev-v1.0.0 - Smart encode modifications
 ├── scripts/
 │   ├── docker-healthcheck.sh                 		# dev-v5.3.0 - changes nginx defaults for CORS serving and encoding profiles
 │   └── init_validate_storage.sh              		# dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 │   └── init_subtitle_languages.sh         			# dev-v1.0.3 - subtitles
-├── caddy/
-│   └── Caddyfile                          		D - # dev-v0.3.1 - Reverse proxy config - >>> Domain changes, 1
-│   └── *caddy*                              
-│       └── *certificates*             		       *# OPTIONAL - where certificates go for caddy via Let's Encrypt if testing*
-├── cms/
-│   └── urls.py                             	    # dev-v0.1.0 - Django URL routing - >>>>>>> Changes if non-HTTPS
-├── files/models/
-│   └── media.py							   		# dev-v1.0.0 - Smart encode modifications
 ├── static/js/
 │   ├── cytube-export.js                    		# dev-v0.1.0 - CyTube export button via media page
 │   └── encoding-status.js                  		# dev-v0.1.7 - Real-time encoding widget status
 ├── templates/
 │   └── root.html                           	    # dev-v0.1.0 - Custom UI templates
 ```
-
-
 
   ## MediaCMS for CyTube Storage Architecture for Block Storage
   
@@ -176,7 +194,7 @@ Host: /mnt/ebs/mediacms_media/
   ├── original/           # Uploaded files / subtitles
   ├── thumbnails/         # Video thumbnails
   ├── uploaded/			  # Temp uploaded content
-  └──userlogos/          # User avatars
+  └── userlogos/          # User avatars
 
 Container: /home/mediacms.io/mediacms/media_files/ (mounted from above via docker-compose.yaml)
 ```
