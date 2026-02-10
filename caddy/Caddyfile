@@ -1,6 +1,11 @@
-# dev-v0.3.1
+# dev-v0.4.0
 
 #####
+# v0.4.0 - CENTRALIZED CONFIGURATION
+#   - Replaced hardcoded domain with {$DOMAIN} environment variable
+#   - Caddy now reads DOMAIN from docker-compose environment
+#   - Removed manual Find/Replace requirement for domain
+#   - Added documentation for environment variable usage
 # v0.3.1 - Added longer connection timeouts
 # v0.3.0 - SUBTITLE CORS SUPPORT
 #   - Added .vtt (WebVTT subtitle) file handler with CORS headers
@@ -14,9 +19,10 @@
 #####
 
 # Stored at: /mediacms/caddy/Caddyfile
-# Find Replace YOUR.DOMAIN.COM, 1ea
+# Configuration now centralized in .env file (DOMAIN)
+# Caddy environment variable syntax: {$VARIABLE_NAME}
 
-YOUR.DOMAIN.COM {
+{$DOMAIN} {
     # Handle HLS playlists (.m3u8 files)
     @hls_playlists {
         path *.m3u8
