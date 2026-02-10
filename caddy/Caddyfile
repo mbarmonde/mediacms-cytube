@@ -1,6 +1,7 @@
-# dev-v0.3.0
+# dev-v0.3.1
 
 #####
+# v0.3.1 - Added longer connection timeouts
 # v0.3.0 - SUBTITLE CORS SUPPORT
 #   - Added .vtt (WebVTT subtitle) file handler with CORS headers
 #   - Required for browsers to load cross-origin subtitle files
@@ -23,9 +24,11 @@ YOUR.DOMAIN.COM {
     handle @hls_playlists {
         reverse_proxy http://media_cms {
             flush_interval -1
+            # nginx handles buffering, these are just connection timeouts
             transport http {
-                read_timeout 2m
-                write_timeout 2m
+                read_timeout 3600s
+                write_timeout 3600s
+                response_header_timeout 3600s
                 dial_timeout 30s
             }
         }

@@ -1,6 +1,7 @@
-# dev-v0.3.6
+# dev-v0.3.7
 
 #####
+# v0.3.7 - added 'NETWORK_NAME' for predictability as an environmental variable for naming the network via .env
 # v0.3.6 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
 #   - added 'container_name' for predictability as an environmental variable to each service except 'migrations' via .env
 # v0.3.5 - SUBTITLE LANGUAGE SUPPORT (Manual Setup)
@@ -153,3 +154,4 @@ services:
 
 networks:
   reverse_proxy:
+    name: ${NETWORK_NAME}
