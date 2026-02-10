@@ -1,6 +1,31 @@
   # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/09/2026
   
   [Main branch that's validated for MediaCMS 7.7 is here](https://github.com/mbarmonde/mediacms-cytube/tree/main)
+
+## Table of Contents
+
+- [Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/09/2026](#dev-branch-mediacms-for-cytube-mediacms-77-updated-2092026)
+- [What is MediaCMS for CyTube?](#what-is-mediacms-for-cytube)
+- [MediaCMS for CyTube Quick Start](#mediacms-for-cytube-quick-start)
+  - [Deployment Checklist](#deployment-checklist)
+- [Help, Troubleshooting, General Information](#help-troubleshooting-general-information)
+  - [MediaCMS for CyTube Key Changes](#mediacms-for-cytube-key-changes)
+  - [Video Workflow for CyTube](#video-workflow-for-cytube)
+  - [First Video Upload Test](#-first-video-upload-test)
+  - [Verify Subtitle Languages](#verify-subtitle-languages)
+  - [Example JSON Payload](#example-json-payload)
+  - [System Architecture](#system-architecture)
+  - [MediaCMS for CyTube Stack](#mediacms-for-cytube-stack)
+  - [MediaCMS for CyTube Change-File List](#mediacms-for-cytube-change-file-list)
+  - [MediaCMS for CyTube Storage Architecture for Block Storage](#mediacms-for-cytube-storage-architecture-for-block-storage)
+  - [Common Operations](#common-operations)
+  - [Troubleshooting](#troubleshooting)
+  - [Performance Tuning](#performance-tuning)
+  - [Enable Huge Files (>5GB)](#enable-huge-files-5gb)
+  - [Security Best Practices](#security-best-practices)
+- [Looking for the Original MediaCMS?](#looking-for-the-original-mediacms)
+  - [Plug in!](#plug-in)
+  - [Contact](#contact)
   
   # What is MediaCMS for CyTube?
   
@@ -150,7 +175,7 @@ Before going live, verify:
    └─→ Users can switch between 480p/720p/1080p in real-time
 ```
 
- ## 📹 First Video Upload Test
+ ## First Video Upload Test
 - Upload a Test Video
 Navigate to: https://yourdomain.com/upload
 
