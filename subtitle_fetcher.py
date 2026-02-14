@@ -1,4 +1,4 @@
-# dev-v0.1.5
+# dev-v0.1.5 - OpenSubtitles.com API Integration for MediaCMS
 
 #!/usr/bin/env python3
 # subtitle_fetcher.py - OpenSubtitles.com API Integration for MediaCMS

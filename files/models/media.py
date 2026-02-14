@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# dev-v0.1.5
+# dev-v0.1.5 - Smart encode modifications and auto subtitles
 
 #####
 # v0.1.5 - Added an enhanced function replacement to subtitle function

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# dev-v0.3.0
+# dev-v0.3.0 - Initializes storage file system, starts containers, creates subtitle languages
 
 #####
 # v0.3.0 - SUBTITLE LANGUAGE AUTO-INITIALIZATION

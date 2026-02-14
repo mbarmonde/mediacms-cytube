@@ -1,5 +1,5 @@
 #!/bin/bash
-# dev-v0.1.1 - Environment validation script for MediaCMS-CyTube
+# dev-v0.1.1 - TESTING ONLY - validates contents in the .env file
 
 #####
 # CHANGELOG

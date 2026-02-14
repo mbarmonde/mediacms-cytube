@@ -1,4 +1,5 @@
-# dev-v0.0.1
+# dev-v0.1.0 - Django URL routing
+
 #####
 #- Initial release
 #####

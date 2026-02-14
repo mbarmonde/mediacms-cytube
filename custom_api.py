@@ -1,4 +1,4 @@
-# dev-v0.6.0
+# dev-v0.6.0 - CyTube manifest API - tied to .env for inputs
 
 #####
 # v0.6.0 - CENTRALIZED CONFIGURATION

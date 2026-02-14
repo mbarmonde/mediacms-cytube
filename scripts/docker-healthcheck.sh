@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# dev-v0.5.3
+# dev-v0.5.3 - changes nginx defaults for CORS serving and encoding profiles; self-healing; activates encoding profiles
 
 #####
 # CHANGELOG:

@@ -1,4 +1,4 @@
-# dev-v0.1.2
+# dev-v0.1.2 - TESTING ONLY - OpenSubtitles API Connection Test
 
 #!/usr/bin/env python3
 # test_opensubtitles.py - OpenSubtitles API Connection Test

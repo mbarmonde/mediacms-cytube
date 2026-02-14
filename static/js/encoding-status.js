@@ -1,4 +1,4 @@
-// dev-v0.1.7
+// dev-v0.1.7 - Real-time encoding widget status
 
 /////
 //- Encoding Status Widget - With ETA and CyTube Ready Status

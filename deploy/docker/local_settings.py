@@ -1,4 +1,4 @@
-# dev-v0.2.4
+# dev-v0.2.4 - Django settings (HLS, 480p) - tied to .env for inputs
 
 #####
 # v0.2.4 - Modified the OpenSubtitles storage location to OPENSUBTITLES_DOWNLOAD_PATH = '/home/mediacms.io/mediacms/media_files/original/subtitles'

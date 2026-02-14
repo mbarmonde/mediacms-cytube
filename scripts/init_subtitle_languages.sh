@@ -1,5 +1,5 @@
 #!/bin/bash
-# dev-v0.1.3
+# dev-v0.1.3 - Auto inputs subtitle languages for MediaCMS via the DB
 
 #####
 # v0.1.3 - FIXED: Use direct SQL command instead of heredoc

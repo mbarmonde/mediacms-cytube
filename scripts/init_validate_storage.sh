@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# dev-v0.1.1
+# dev-v0.1.1 - init-config for all CyTube custom files and storage setup
 
 #####
-# v0.1.1 - changed all EIGHT_TB_PATH references to EBS_PATH, and all 8TB to EBS references
+# v0.1.1 - changed all EIGHT_TB_PATH references to EBS_PATH, and all 8TB to EBS references - REQUIRED
 # MediaCMS Storage Setup and Validation Script
 # Usage: ./scripts/setup_storage.sh [--init|--validate|--full]
 #   --init      : Initialize EBS structure only
