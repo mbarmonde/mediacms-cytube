@@ -1,6 +1,7 @@
-# dev-v0.3.9
+# dev-v0.4.0
 
 #####
+# v0.4.0 - Added env_file variable to the web service to call the .env file directly for subtitles
 # v0.3.9 - CRITICAL FIX: Pass DOMAIN to all Python containers
 # - Added DOMAIN, CYTUBE_DESCRIPTION, CYTUBE_ORGANIZATION to web, celery_beat, celery_worker
 # - Fixed OSError: Missing required environment variable 'DOMAIN' in .env
@@ -68,6 +69,8 @@ services:
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
       # MediaCMS for CyTube - Runs a key healthcheck to remove duplicate CORS and set encoding profiles
       - ./scripts/docker-healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+    env_file:
+      - .env
     environment:
       ENABLE_CELERY_BEAT: 'no'
       ENABLE_CELERY_SHORT: 'no'

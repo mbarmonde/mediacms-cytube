@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
-# dev-v1.0.0
+# dev-v0.1.5
 
 #####
-# v1.0.0 - Initial release
+# v0.1.5 - Added an enhanced function replacement to subtitle function
+# v0.1.4 - Added logging to subtitle function
+# v0.1.3 - Fixed signal to check encoding_status instead of state
+# v0.1.2 - Subtitle enhanced logging
+# v0.1.1 - Subtitle integration added
+# v0.1.0 - Initial release with smart encode
 #####
 
 # Stored at: /mediacms/files/models/media.py
@@ -1113,3 +1118,88 @@ def media_m2m(sender, instance, **kwargs):
     if instance.tags.all():
         for tag in instance.tags.all():
             tag.update_tag_media()
+            
+# =============================================================================
+# OPENSUBTITLES INTEGRATION
+# =============================================================================
+# Automatic subtitle fetching after video encoding completes
+# Uses post_save signal to trigger subtitle download from OpenSubtitles.com
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import logging
+
+logger = logging.getLogger(__name__)
+
+@receiver(post_save, sender=Media)
+def auto_fetch_subtitles(sender, instance, created, **kwargs):
+    """
+    Django signal: Automatically fetch subtitles after encoding completes.
+    
+    Triggered on every Media.save(), but only executes when:
+    - Encoding has completed successfully (encoding_status == 'success')
+    - No subtitles already exist (prevents duplicates)
+    - OpenSubtitles integration is enabled
+    - This is not a new upload (encoding must be complete)
+    
+    Args:
+        sender: Media model class
+        instance: The Media object being saved
+        created: Boolean, True if this is a new object
+        **kwargs: Additional signal arguments
+    """
+    # FIRST LINE - Always log that signal was triggered
+    print(f"🔔 AUTO_FETCH_SUBTITLES SIGNAL CALLED: {instance.title}")
+    
+    # Import here to avoid circular imports and to fail gracefully if module missing
+    try:
+        from subtitle_fetcher import fetch_subtitle_for_media, ENABLED
+        print(f"✅ Import successful, ENABLED={ENABLED}")
+    except ImportError as e:
+        print(f"❌ Failed to import subtitle_fetcher: {e}")
+        return
+    
+    # Check if feature is enabled first (before any other checks)
+    if not ENABLED:
+        print("⚠️ OpenSubtitles integration is disabled")
+        return
+    
+    # Skip if this is a brand new upload (no encoding yet)
+    if created:
+        print(f"🆕 Skipping subtitle fetch for new upload: {instance.title}")
+        return
+    
+    # Skip if encoding not complete or failed
+    if not hasattr(instance, 'encoding_status') or instance.encoding_status != 'success':
+        print(f"⏳ Skipping subtitle fetch - encoding_status is '{getattr(instance, 'encoding_status', 'unknown')}': {instance.title}")
+        return
+    
+    # Check if subtitles already exist (prevents re-fetching on every save)
+    if instance.subtitles.exists():
+        print(f"📝 Media '{instance.title}' already has {instance.subtitles.count()} subtitle(s), skipping fetch")
+        return
+    
+    print(f"🎬 Triggering automatic subtitle fetch for: {instance.title}")
+    
+    try:
+        # Fetch subtitle from OpenSubtitles
+        result = fetch_subtitle_for_media(instance)
+        
+        if result:
+            subtitle_path = result.get('path')
+            language = result.get('language', 'en')
+            release_name = result.get('release', 'unknown')
+            
+            print(f"✅ Successfully fetched subtitle for '{instance.title}': {subtitle_path}")
+            print(f"  📦 Release: {release_name}")
+            print(f"  🌐 Language: {language}")
+            
+        else:
+            print(f"⚠️  No suitable subtitle found for: {instance.title}")
+            
+    except Exception as e:
+        # Don't let subtitle fetching errors break media processing
+        print(f"❌ Error fetching subtitle for '{instance.title}': {e}")
+        import traceback
+        traceback.print_exc()
+

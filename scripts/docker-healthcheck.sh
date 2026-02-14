@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# dev-v5.3.0
+# dev-v0.5.3
 
 #####
 # CHANGELOG:
-# v5.3.0 - Added profile verification with self-healing
+# v0.5.3 - Added profile verification with self-healing
 #        - Deactivates ALL profiles before activating target ones
 #        - Checks profile correctness even when lock file exists
 #        - Auto-reconfigures if profile mismatch detected
-# v5.2.0 - CORS removal now runs on EVERY healthcheck (not just first time)
+# v0.5.2 - CORS removal now runs on EVERY healthcheck (not just first time)
 #        - Ensures CORS headers stay removed even if config gets reverted
-# v5.1.0 - Added nginx CORS header removal
-# v5.0.0 - Removed nginx configuration section
+# v0.5.1 - Added nginx CORS header removal
+# v0.5.0 - Removed nginx configuration section
 #####
 
 set -e

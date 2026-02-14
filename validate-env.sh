@@ -1,12 +1,12 @@
 #!/bin/bash
-# dev-v1.0.1 - Environment validation script for MediaCMS-CyTube
+# dev-v0.1.1 - Environment validation script for MediaCMS-CyTube
 
 #####
 # CHANGELOG
-# v1.0.1 - Added validation for quoted values with spaces
+# v0.1.1 - Added validation for quoted values with spaces
 #   - Warns if CYTUBE_DESCRIPTION/ORGANIZATION have spaces but missing quotes
 #   - Enhanced error messages for common .env syntax issues
-# v1.0.0 - Initial release
+# v0.1.0 - Initial release
 #   - Validates required environment variables from .env
 #   - Checks DOMAIN format (no protocol, valid characters)
 #   - Provides clear error messages for missing/invalid values

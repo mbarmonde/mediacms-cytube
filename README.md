@@ -1,5 +1,9 @@
   # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/09/2026
   
+  [![GitHub license](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/mediacms-io/mediacms/main/LICENSE.txt)
+[![Releases](https://img.shields.io/github/v/release/mediacms-io/mediacms?color=green)](https://github.com/mediacms-io/mediacms/releases/)
+[![DockerHub](https://img.shields.io/docker/pulls/mediacms/mediacms)](https://hub.docker.com/r/mediacms/mediacms)
+  
   [Main branch that's validated for MediaCMS 7.7 is here](https://github.com/mbarmonde/mediacms-cytube/tree/main)
 
 ## Table of Contents
@@ -272,36 +276,41 @@ Once encoding completes:
 | Docker Compose | Latest | Container orchestration |
 
   ## MediaCMS for CyTube Change-File List
-  Updated 2/09/2026
+  Updated 2/14/2026
   
 ```
-/mediacms/
-├── .env                                   			# dev-v0.2.1 - .env for docker-compose.yaml and other files across the project
-├── cytube-execute-all-sh-and-storage-init.sh  		# dev-v0.3.0 - Initializes storage file system, starts containers, creates subtitle languages
-├── docker-compose.yaml                        		# dev-v0.3.8 - Container orchestration tied to .env for inputs
-├── custom_api.py                         			# dev-v0.6.0 - CyTube manifest API - tied to .env for inputs
-├── custom_urls.py                          	    # dev-v0.1.3 - Custom API URLs
-├── validate-env.sh   	                            # dev-v1.0.0 - validates contents in the .env file
-├── caddy/
-│   └── Caddyfile                          		    # dev-v0.4.0 - Reverse proxy config - tied to .env for inputs
-│   └── *caddy*                              
-│       └── *certificates*             		        ###### OPTIONAL - where certificates go for caddy via Let's Encrypt if testing #####
-├── cms/
-│   └── urls.py                             	    # dev-v0.1.0 - Django URL routing
-├── deploy/docker/
-│   └── Local_settings.py                  			# dev-v0.2.0 - Django settings (HLS, 480p) - tied to .env for inputs
-│   └── nginx_http_only.conf				  		# dev-v1.0.0 - large file timeouts, CORS removal
-├── files/models/
-│   └── media.py							   		# dev-v1.0.0 - Smart encode modifications
-├── scripts/
-│   ├── docker-healthcheck.sh                 		# dev-v5.3.0 - changes nginx defaults for CORS serving and encoding profiles
-│   └── init_validate_storage.sh              		# dev-v0.1.1 - init-config for all CyTube custom files and storage setup
-│   └── init_subtitle_languages.sh         			# dev-v1.0.3 - subtitles
-├── static/js/
-│   ├── cytube-export.js                    		# dev-v0.1.0 - CyTube export button via media page
-│   └── encoding-status.js                  		# dev-v0.1.7 - Real-time encoding widget status
-├── templates/
-│   └── root.html                           	    # dev-v0.1.0 - Custom UI templates
+=== DEVELOPMENT VERSIONS (dev-vX.X.X) ===
+
+├── .env                                          # dev-v0.2.3
+caddy/
+│   ├── Caddyfile                                 # dev-v0.4.0
+cms/
+│   ├── urls.py                                   # dev-v0.0.1
+├── custom_api.py                                 # dev-v0.6.0
+├── custom_urls.py                                # dev-v0.1.3
+├── cytube-execute-all-sh-and-storage-init.sh     # dev-v0.3.0
+deploy/
+│   ├── docker/
+│   │   ├── local_settings.py                     # dev-v0.2.4
+│   │   ├── nginx_http_only.conf                  # dev-v0.1.0
+├── docker-compose.yaml                           # dev-v0.4.0
+files/
+│   ├── models/
+│   │   ├── media.py                              # dev-v0.1.5
+scripts/
+│   ├── docker-healthcheck.sh                     # dev-v0.5.3
+│   ├── init_subtitle_languages.sh                # dev-v0.1.3
+│   ├── init_validate_storage.sh                  # dev-v0.1.1
+static/
+│   ├── js/
+│   │   ├── cytube-export.js                      # dev-v0.1.0
+│   │   ├── encoding-status.js                    # dev-v0.1.7
+├── subtitle_fetcher.py                           # dev-v0.1.5
+templates/
+│   ├── root.html                                 # dev-v0.1.0
+├── test_opensubtitles.py                         # dev-v0.1.2
+├── test_subtitle_fetcher_standalone.py           # dev-v0.1.0
+├── validate-env.sh                               # dev-v0.1.1
 ```
 
   ## MediaCMS for CyTube Storage Architecture for Block Storage

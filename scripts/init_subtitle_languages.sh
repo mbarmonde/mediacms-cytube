@@ -1,13 +1,13 @@
 #!/bin/bash
-# dev-v1.0.3
+# dev-v0.1.3
 
 #####
-# v1.0.3 - FIXED: Use direct SQL command instead of heredoc
+# v0.1.3 - FIXED: Use direct SQL command instead of heredoc
 #   - Heredoc wasn't properly passing SQL to psql
 #   - Now uses psql -c with full SQL string
-# v1.0.2 - Added error checking and debug output
-# v1.0.1 - Auto-detect DB container name
-# v1.0.0 - Initial release
+# v0.1.2 - Added error checking and debug output
+# v0.1.1 - Auto-detect DB container name
+# v0.1.0 - Initial release
 #####
 
 # Stored at: /mediacms/scripts/init_subtitle_languages.sh
