@@ -1,3 +1,15 @@
+# dev-v0.1.0 - Encoding settings now read from Django settings (configured via .env)
+
+#####
+# CHANGELOG
+# v0.1.0 - FFMPEG CRF CONFIGURATION FIX
+# - Added get_video_crfs() function to dynamically load CRF values from settings
+# - VIDEO_CRFS now reads from settings.FFMPEG_CRF_H264, settings.FFMPEG_CRF_H265, settings.FFMPEG_CRF_VP9
+# - Fixes bug where FFMPEG_CRF in local_settings.py was ignored (hardcoded values)
+# - Falls back to sensible defaults if settings not available (backward compatible)
+# - CRF values now configurable via .env file without code changes
+#####
+
 # Kudos to Werner Robitza, AVEQ GmbH, for helping with ffmpeg
 # related content
 
@@ -38,12 +50,51 @@ KEYFRAME_DISTANCE_MIN = 2
 VP9_SPEED = 2
 
 
-VIDEO_CRFS = {
-    "h264_baseline": 23,
-    "h264": 23,
-    "h265": 28,
-    "vp9": 32,
-}
+# ============================================
+# DYNAMIC CRF LOADING FROM SETTINGS (.ENV)
+# ============================================
+# Fixes bug where FFMPEG_CRF was hardcoded and ignored settings
+# Now reads from settings.FFMPEG_CRF_H264, settings.FFMPEG_CRF_H265, settings.FFMPEG_CRF_VP9
+# These are configured via .env file and loaded in local_settings.py
+
+def get_video_crfs():
+    """Get CRF values from Django settings or use defaults
+    
+    Returns:
+        dict: CRF values for different codecs
+        
+    CRF (Constant Rate Factor) controls quality:
+    - Lower CRF = Better quality, larger files
+    - Higher CRF = Lower quality, smaller files
+    
+    Default values:
+    - H.264: 23 (FFmpeg default)
+    - H.265: 28 (equivalent to H.264 CRF 23)
+    - VP9: 32 (equivalent to H.264 CRF 23)
+    """
+    try:
+        from django.conf import settings
+        crfs = {
+            "h264_baseline": getattr(settings, 'FFMPEG_CRF_H264', 23),
+            "h264": getattr(settings, 'FFMPEG_CRF_H264', 23),
+            "h265": getattr(settings, 'FFMPEG_CRF_H265', 28),
+            "vp9": getattr(settings, 'FFMPEG_CRF_VP9', 32),
+        }
+        logger.info(f"📊 CRF values loaded from settings: H.264={crfs['h264']}, H.265={crfs['h265']}, VP9={crfs['vp9']}")
+        return crfs
+    except (ImportError, AttributeError) as e:
+        # Fallback if settings not available (should never happen in production)
+        logger.warning(f"⚠️  Could not load CRF from settings: {e}. Using defaults.")
+        return {
+            "h264_baseline": 23,
+            "h264": 23,
+            "h265": 28,
+            "vp9": 32,
+        }
+
+# VIDEO_CRFS now loaded dynamically from settings (configured via .env)
+# Previously hardcoded, now respects FFMPEG_CRF_H264, FFMPEG_CRF_H265, FFMPEG_CRF_VP9
+VIDEO_CRFS = get_video_crfs()
 
 # video rates for 25 or 60 fps input, for different codecs, in kbps
 VIDEO_BITRATES = {
