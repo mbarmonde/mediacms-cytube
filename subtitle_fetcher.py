@@ -1,7 +1,8 @@
-# dev-v0.1.6 - OpenSubtitles.com API Integration for MediaCMS
+# dev-v0.1.7 - OpenSubtitles.com API Integration for MediaCMS
 
 #!/usr/bin/env python3
 # subtitle_fetcher.py - OpenSubtitles.com API Integration for MediaCMS
+# v0.1.7 - Added per-video subtitle timing offset adjustment
 # v0.1.6 - Added SRT to WebVTT conversion for CyTube compatibility
 # v0.1.5 - Fixed Language model to use .title instead of .name (versions v0.1.3, and v0.1.4 didnt work)
 # v0.1.2 - Corrected the subtitle path to be exact based on MediaCMs defaults
@@ -21,8 +22,9 @@ Workflow:
 1. parse_filename() - Extract title, year from "Movie.Name.2023.1080p.mkv"
 2. search_subtitles() - Query OpenSubtitles API for matches
 3. download_subtitle() - Download best match and save to storage
-4. convert_srt_to_vtt() - Convert SRT format to WebVTT for video.js compatibility
-5. fetch_subtitle_for_media() - Main entry point (called by Django signal)
+4. adjust_subtitle_timing() - Apply per-video timing offset (NEW in v0.1.7)
+5. convert_srt_to_vtt() - Convert SRT format to WebVTT for video.js compatibility
+6. fetch_subtitle_for_media() - Main entry point (called by Django signal)
 
 Authentication:
 - Uses permanent JWT token from OpenSubtitles.com user profile
@@ -38,6 +40,7 @@ import logging
 import requests
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
+from datetime import timedelta
 
 # Django imports - must be imported after Django is configured
 try:
@@ -85,29 +88,29 @@ class QuotaExceededError(OpenSubtitlesError):
 def parse_filename(filename: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Extract movie/show title and year from filename.
-    
+
     Handles common naming patterns:
     - Moonraker.1979.1080p.BluRay.x264.mkv -> ("Moonraker", "1979")
     - The.Matrix.1999.mkv -> ("The Matrix", "1999")
     - Movie.Name.2023.WEBRip.mp4 -> ("Movie Name", "2023")
     - Some.Movie.mkv -> ("Some Movie", None)
-    
+
     Args:
         filename: Original uploaded filename
-        
+
     Returns:
         Tuple of (title, year) where year may be None if not found
     """
     # Remove file extension
     name = Path(filename).stem
-    
+
     # Pattern 1: Find year (4 digits between 1900-2099)
     year_match = re.search(r'\b(19\d{2}|20\d{2})\b', name)
     year = year_match.group(1) if year_match else None
-    
+
     # Pattern 2: Extract title (everything before year or quality markers)
     quality_markers = r'\b(1080p|2160p|720p|480p|360p|BluRay|BRRip|WEBRip|WEB-DL|HDTV|DVDRip|x264|x265|HEVC|AAC|AC3)\b'
-    
+
     if year:
         # Split at year
         title_part = name.split(year)[0]
@@ -115,34 +118,34 @@ def parse_filename(filename: str) -> Tuple[Optional[str], Optional[str]]:
         # Split at quality marker
         quality_split = re.split(quality_markers, name, flags=re.IGNORECASE)
         title_part = quality_split[0]
-    
+
     # Clean title: replace dots/underscores with spaces, strip whitespace
     title = re.sub(r'[._]', ' ', title_part).strip()
-    
+
     # Remove common release group tags in brackets
     title = re.sub(r'\[.*?\]', '', title).strip()
-    
+
     logger.info(f"Parsed filename '{filename}' -> Title: '{title}', Year: {year}")
-    
+
     return (title if title else None, year)
 
 
 def get_api_headers() -> Dict[str, str]:
     """
     Build headers for OpenSubtitles API requests.
-    
+
     Returns:
         Dictionary of HTTP headers including authentication
-        
+
     Raises:
         AuthenticationError: If API_KEY or JWT_TOKEN is missing
     """
     if not API_KEY:
         raise AuthenticationError("OPENSUBTITLES_API_KEY not configured in settings")
-    
+
     if not JWT_TOKEN:
         raise AuthenticationError("OPENSUBTITLES_JWT_TOKEN not configured in settings")
-    
+
     return {
         'Api-Key': API_KEY,
         'Authorization': f'Bearer {JWT_TOKEN}',
@@ -154,60 +157,60 @@ def get_api_headers() -> Dict[str, str]:
 def search_subtitles(title: str, year: Optional[str] = None, language: str = 'en') -> List[Dict]:
     """
     Search OpenSubtitles.com for matching subtitles.
-    
+
     Args:
         title: Movie or show title
         year: Release year (optional, improves accuracy)
         language: ISO 639-1 language code (default: 'en')
-        
+
     Returns:
         List of subtitle results, sorted by download count (most popular first)
         Empty list if no results found
-        
+
     Raises:
         OpenSubtitlesError: If API request fails
         AuthenticationError: If authentication is invalid
     """
     try:
         headers = get_api_headers()
-        
+
         params = {
             'query': title,
             'languages': language
         }
-        
+
         if year:
             params['year'] = year
-        
+
         logger.info(f"Searching OpenSubtitles for: '{title}' ({year or 'no year'}) in language '{language}'")
-        
+
         response = requests.get(
             f"{API_URL}/subtitles",
             headers=headers,
             params=params,
             timeout=10
         )
-        
+
         if response.status_code == 401:
             raise AuthenticationError("Invalid API credentials - check API_KEY and JWT_TOKEN")
-        
+
         response.raise_for_status()
-        
+
         data = response.json()
         results = data.get('data', [])
         total = data.get('total_count', 0)
-        
+
         logger.info(f"Found {total} total results, returned {len(results)} results")
-        
+
         # Sort by download count (most popular first)
         sorted_results = sorted(
             results,
             key=lambda x: x.get('attributes', {}).get('download_count', 0),
             reverse=True
         )
-        
+
         return sorted_results[:MAX_RESULTS]
-        
+
     except requests.exceptions.Timeout:
         logger.error("OpenSubtitles API request timed out")
         raise OpenSubtitlesError("API request timed out")
@@ -216,32 +219,156 @@ def search_subtitles(title: str, year: Optional[str] = None, language: str = 'en
         raise OpenSubtitlesError(f"API request failed: {e}")
 
 
-def convert_srt_to_vtt(srt_content: bytes) -> str:
+def parse_timestamp(timestamp: str) -> timedelta:
+    """
+    Parse SRT/VTT timestamp string to timedelta object.
+
+    Args:
+        timestamp: Time in format "HH:MM:SS,MMM" or "HH:MM:SS.MMM"
+
+    Returns:
+        timedelta object representing the timestamp
+
+    Example:
+        "00:01:23.456" -> timedelta(seconds=83.456)
+    """
+    # Replace comma with period for consistent parsing
+    timestamp = timestamp.replace(',', '.')
+
+    # Parse HH:MM:SS.mmm
+    parts = timestamp.split(':')
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds_parts = parts[2].split('.')
+    seconds = int(seconds_parts[0])
+    milliseconds = int(seconds_parts[1]) if len(seconds_parts) > 1 else 0
+
+    return timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
+
+
+def format_timestamp(td: timedelta) -> str:
+    """
+    Format timedelta object back to VTT timestamp string.
+
+    Args:
+        td: timedelta object
+
+    Returns:
+        Formatted timestamp string "HH:MM:SS.MMM"
+
+    Example:
+        timedelta(seconds=83.456) -> "00:01:23.456"
+    """
+    # Handle negative times by clamping to 00:00:00.000
+    if td.total_seconds() < 0:
+        return "00:00:00.000"
+
+    total_seconds = int(td.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    milliseconds = int((td.total_seconds() - total_seconds) * 1000)
+
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
+
+
+def adjust_subtitle_timing(srt_content: bytes, offset_seconds: float) -> bytes:
+    """
+    Adjust all subtitle timestamps by a fixed offset.
+
+    Args:
+        srt_content: Raw SRT file content as bytes
+        offset_seconds: Time offset in seconds (negative = delay, positive = advance)
+
+    Returns:
+        Modified SRT content as bytes with adjusted timestamps
+
+    Example:
+        offset_seconds = -4.5  # Delay subtitles by 4.5 seconds
+        offset_seconds = 2.0   # Advance subtitles by 2 seconds
+    """
+    if offset_seconds == 0:
+        logger.info("No timing offset applied (offset is 0.0)")
+        return srt_content
+
+    try:
+        # Decode content
+        try:
+            text = srt_content.decode('utf-8-sig')
+        except UnicodeDecodeError:
+            try:
+                text = srt_content.decode('latin-1')
+            except UnicodeDecodeError:
+                text = srt_content.decode('cp1252')
+
+        offset_delta = timedelta(seconds=offset_seconds)
+
+        # Pattern to match SRT timestamp lines: "00:01:23,456 --> 00:01:27,890"
+        timestamp_pattern = r'(\d{2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,\.]\d{3})'
+
+        def adjust_match(match):
+            start_str = match.group(1)
+            end_str = match.group(2)
+
+            # Parse timestamps
+            start_time = parse_timestamp(start_str)
+            end_time = parse_timestamp(end_str)
+
+            # Apply offset
+            new_start = start_time + offset_delta
+            new_end = end_time + offset_delta
+
+            # Format back to string (using comma for SRT format)
+            new_start_str = format_timestamp(new_start).replace('.', ',')
+            new_end_str = format_timestamp(new_end).replace('.', ',')
+
+            return f"{new_start_str} --> {new_end_str}"
+
+        # Replace all timestamps
+        adjusted_text = re.sub(timestamp_pattern, adjust_match, text)
+
+        logger.info(f"✅ Applied timing offset: {offset_seconds:+.2f}s ({'delayed' if offset_seconds < 0 else 'advanced'})")
+
+        return adjusted_text.encode('utf-8')
+
+    except Exception as e:
+        logger.error(f"Failed to adjust subtitle timing: {e}")
+        # Return original content if adjustment fails
+        return srt_content
+
+
+def convert_srt_to_vtt(srt_content: bytes, offset_seconds: float = 0.0) -> str:
     """
     Convert SRT subtitle format to WebVTT format for video.js compatibility.
-    
+    Now includes optional timing offset adjustment.
+
     SRT Format:
         1
         00:00:20,000 --> 00:00:24,400
         Senator, we're making our final approach into Coruscant.
-        
+
     WebVTT Format:
         WEBVTT
-        
+
         1
         00:00:20.000 --> 00:00:24.400
         Senator, we're making our final approach into Coruscant.
-    
+
     Args:
         srt_content: Raw SRT file content as bytes
-        
+        offset_seconds: Time offset in seconds (default: 0.0, negative = delay)
+
     Returns:
-        WebVTT formatted string
-        
+        WebVTT formatted string with timing adjusted
+
     Raises:
         Exception: If conversion fails
     """
     try:
+        # Apply timing offset first (if needed)
+        if offset_seconds != 0:
+            srt_content = adjust_subtitle_timing(srt_content, offset_seconds)
+
         # Decode content, handling common encodings and BOM
         try:
             text = srt_content.decode('utf-8-sig')  # Remove UTF-8 BOM if present
@@ -250,97 +377,98 @@ def convert_srt_to_vtt(srt_content: bytes) -> str:
                 text = srt_content.decode('latin-1')
             except UnicodeDecodeError:
                 text = srt_content.decode('cp1252')  # Windows encoding
-        
+
         # Start with WebVTT header
         vtt_content = "WEBVTT\n\n"
-        
+
         # Replace timestamp format: SRT uses ',' for milliseconds, VTT uses '.'
         # SRT: 00:00:20,000 --> 00:00:24,400
         # VTT: 00:00:20.000 --> 00:00:24.400
         text = re.sub(r'(\d{2}:\d{2}:\d{2}),(\d{3})', r'\1.\2', text)
-        
+
         # Add converted content
         vtt_content += text
-        
+
         logger.info("Successfully converted SRT to WebVTT format")
         return vtt_content
-        
+
     except Exception as e:
         logger.error(f"SRT to VTT conversion failed: {e}")
         raise OpenSubtitlesError(f"Subtitle conversion failed: {e}")
 
 
-def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str) -> Optional[str]:
+def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str, offset_seconds: float = 0.0) -> Optional[str]:
     """
     Download subtitle file from OpenSubtitles.com and convert to WebVTT.
-    
+
     Args:
         file_id: OpenSubtitles file ID from search results
         destination_dir: Directory to save subtitle
         filename_prefix: Prefix for saved file (usually original video filename)
-        
+        offset_seconds: Time offset in seconds for subtitle timing adjustment
+
     Returns:
         Full path to downloaded subtitle file (.vtt), or None if download fails
-        
+
     Raises:
         QuotaExceededError: If daily download quota exceeded
         OpenSubtitlesError: If download or conversion fails
     """
     try:
         headers = get_api_headers()
-        
+
         payload = {'file_id': file_id}
-        
+
         logger.info(f"Requesting download link for file_id: {file_id}")
-        
+
         response = requests.post(
             f"{API_URL}/download",
             headers=headers,
             json=payload,
             timeout=10
         )
-        
+
         if response.status_code == 406:
             raise QuotaExceededError("Daily download quota exceeded")
-        
+
         if response.status_code == 401:
             raise AuthenticationError("Invalid API credentials during download")
-        
+
         response.raise_for_status()
-        
+
         data = response.json()
         download_url = data.get('link')
         original_filename = data.get('file_name', 'subtitle.srt')
         remaining = data.get('remaining', 'unknown')
-        
+
         logger.info(f"Download link obtained. Remaining downloads: {remaining}")
-        
+
         if not download_url:
             raise OpenSubtitlesError("No download link in API response")
-        
+
         # Download the actual subtitle file
         file_response = requests.get(download_url, timeout=30)
         file_response.raise_for_status()
-        
-        # Convert SRT to WebVTT
-        logger.info("Converting SRT to WebVTT format...")
-        vtt_content = convert_srt_to_vtt(file_response.content)
-        
+
+        # Convert SRT to WebVTT (with optional timing adjustment)
+        logger.info(f"Converting SRT to WebVTT format (offset: {offset_seconds:+.2f}s)...")
+        vtt_content = convert_srt_to_vtt(file_response.content, offset_seconds)
+
         # Create destination directory if it doesn't exist
         os.makedirs(destination_dir, exist_ok=True)
-        
+
         # Save as .vtt file
         dest_filename = f"{filename_prefix}.vtt"
         dest_path = os.path.join(destination_dir, dest_filename)
-        
+
         with open(dest_path, 'w', encoding='utf-8') as f:
             f.write(vtt_content)
-        
+
         file_size = len(vtt_content.encode('utf-8'))
         logger.info(f"Subtitle converted and saved as WebVTT: {dest_path} ({file_size} bytes)")
-        
+
         return dest_path
-        
+
     except requests.exceptions.Timeout:
         logger.error("Subtitle download timed out")
         raise OpenSubtitlesError("Download timed out")
@@ -355,12 +483,13 @@ def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str) 
 def fetch_subtitle_for_media(media_object) -> Optional[Dict[str, str]]:
     """
     Main entry point: Fetch and download subtitle for a MediaCMS media object.
-    
+
     This function is called by Django post_save signal after video encoding completes.
-    
+    Now supports per-video timing offset via media_object.subtitle_timing_offset field.
+
     Args:
         media_object: MediaCMS Media model instance
-        
+
     Returns:
         Dictionary with subtitle info if successful, None otherwise
     """
@@ -368,67 +497,72 @@ def fetch_subtitle_for_media(media_object) -> Optional[Dict[str, str]]:
     if not ENABLED:
         logger.debug("OpenSubtitles integration is disabled in settings")
         return None
-    
+
     # Check if auto-download is enabled
     if not AUTO_DOWNLOAD:
         logger.debug("Auto-download is disabled in settings")
         return None
-    
+
     # Check if media already has subtitles (skip to avoid duplicates)
     if hasattr(media_object, 'subtitles') and media_object.subtitles.exists():
         logger.info(f"Media '{media_object.title}' already has subtitles, skipping OpenSubtitles fetch")
         return None
-    
+
     try:
+        # Get per-video timing offset (new in v0.1.7)
+        timing_offset = getattr(media_object, 'subtitle_timing_offset', 0.0)
+        if timing_offset != 0:
+            logger.info(f"📝 Using per-video subtitle timing offset: {timing_offset:+.2f}s for '{media_object.title}'")
+
         # Extract title and year from filename
         original_filename = media_object.media_file.name if hasattr(media_object, 'media_file') else media_object.title
         title, year = parse_filename(original_filename)
-        
+
         if not title:
             logger.warning(f"Could not extract title from filename: {original_filename}")
             return None
-        
+
         # Search for subtitles
         language = LANGUAGES[0] if LANGUAGES else 'en'
         results = search_subtitles(title, year, language)
-        
+
         if not results:
             logger.info(f"No subtitles found for '{title}' ({year or 'no year'})")
             return None
-        
+
         # Get best match
         best_match = results[0]
         attrs = best_match.get('attributes', {})
         files = attrs.get('files', [])
-        
+
         if not files:
             logger.warning(f"Best match has no files: {attrs.get('release', 'unknown')}")
             return None
-        
+
         file_id = files[0].get('file_id')
         release_name = attrs.get('release', 'unknown')
         download_count = attrs.get('download_count', 0)
-        
+
         logger.info(f"Selected subtitle: '{release_name}' (downloads: {download_count})")
-        
+
         # Determine destination directory
         user = media_object.user
         dest_dir = os.path.join(DOWNLOAD_PATH, 'user', user.username)
-        
+
         # Use media hash as filename prefix
         filename_prefix = str(media_object.uid).replace('-', '')
-        
-        # Download subtitle (now returns .vtt file)
-        subtitle_path = download_subtitle(file_id, dest_dir, filename_prefix)
-        
+
+        # Download subtitle with timing offset applied (now returns .vtt file)
+        subtitle_path = download_subtitle(file_id, dest_dir, filename_prefix, timing_offset)
+
         if not subtitle_path:
             logger.error("Download returned no path")
             return None
-        
+
         # Create Subtitle database entry to link with Media
         try:
             from files.models import Subtitle, Language
-            
+
             # Get Language object
             try:
                 language_obj = Language.objects.get(code=language)
@@ -438,10 +572,10 @@ def fetch_subtitle_for_media(media_object) -> Optional[Dict[str, str]]:
                 language_obj = Language.objects.first()
                 if not language_obj:
                     raise OpenSubtitlesError("No Language objects exist in database")
-            
+
             # Create relative path for MediaCMS
             relative_path = subtitle_path.replace('/home/mediacms.io/mediacms/media_files/', '')
-            
+
             # Create Subtitle entry
             subtitle_obj, created = Subtitle.objects.get_or_create(
                 media=media_object,
@@ -451,24 +585,25 @@ def fetch_subtitle_for_media(media_object) -> Optional[Dict[str, str]]:
                     'user': media_object.user
                 }
             )
-            
+
             if created:
                 logger.info(f"✅ Created Subtitle database entry: {subtitle_obj.id}")
             else:
                 logger.info(f"⚠️ Subtitle entry already exists: {subtitle_obj.id}")
-                
+
         except Exception as e:
             logger.error(f"❌ Failed to create Subtitle database entry: {e}", exc_info=True)
-        
+
         # Return subtitle info
         return {
             'path': subtitle_path,
             'language': language,
             'filename': os.path.basename(subtitle_path),
             'source': 'opensubtitles.com',
-            'release': release_name
+            'release': release_name,
+            'timing_offset': timing_offset  # Include in return info
         }
-        
+
     except AuthenticationError as e:
         logger.error(f"Authentication failed: {e}")
         return None

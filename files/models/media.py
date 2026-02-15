@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-# dev-v0.1.8 - Direct subtitle fetch in post_encode_actions (more reliable than signal)
+# dev-v0.1.9 - Direct subtitle fetch in post_encode_actions (more reliable than signal)
 
 #####
+# v0.1.9 - Per-video subtitle timing adjustment (in seconds)
 # v0.1.8 - Removed status transition check (fetch on every post_encode_actions if no subs)
 # v0.1.7 - Direct subtitle fetch in post_encode_actions method for reliability
 # v0.1.6 - Fixed subtitle fetch to trigger after chunk encoding completes
@@ -223,6 +224,12 @@ class Media(models.Model):
     video_height = models.IntegerField(default=1)
 
     views = models.IntegerField(db_index=True, default=1)
+    
+     # dev-v0.1.9: Per-video subtitle timing adjustment (in seconds)
+    subtitle_timing_offset = models.FloatField(
+        default=0.0,
+        help_text="Subtitle timing offset in seconds (negative = delay subtitles, positive = advance subtitles)"
+    )
 
     allow_whisper_transcribe = models.BooleanField("Transcribe auto-detected language", default=False)
     allow_whisper_transcribe_and_translate = models.BooleanField("Transcribe auto-detected language and translate to English", default=False)

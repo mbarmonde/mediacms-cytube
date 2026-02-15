@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+
+# dev-v0.1.3 - UI modifications for subtitle offset
+
+#####
+# v0.1.3 - Removed the offset UI from the metadata tab
+# v0.1.2 - Added subtitle timing offset to Captions form with validation, removed from Metadata form
+# v0.1.1 - Added subtitle_timing_offset field to MediaMetadataForm
+# v0.1.0 - Initial release with UI modifications for subtitle offset
+#####
+
+# Stored at: /mediacms/files/forms.py
+
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Field, Layout, Submit
@@ -331,6 +344,15 @@ class WhisperSubtitlesForm(forms.ModelForm):
 
 
 class SubtitleForm(forms.ModelForm):
+    # dev-v0.1.2: Added subtitle timing offset to Captions page
+    subtitle_timing_offset = forms.FloatField(
+        required=False,
+        initial=0.0,
+        widget=forms.NumberInput(attrs={'step': 0.5}),
+        label="Subtitle Timing Offset (seconds)",
+        help_text="Adjust subtitle timing: negative delays subtitles (e.g., -4.5), positive advances them. Changes auto-refresh subtitles."
+    )
+    
     class Meta:
         model = Subtitle
         fields = ["language", "subtitle_file"]
@@ -345,6 +367,13 @@ class SubtitleForm(forms.ModelForm):
     def __init__(self, media_item, *args, **kwargs):
         super(SubtitleForm, self).__init__(*args, **kwargs)
         self.instance.media = media_item
+        self.media_item = media_item
+        
+        # dev-v0.1.2: Pre-populate with current offset value
+        self.fields['subtitle_timing_offset'].initial = media_item.subtitle_timing_offset
+        
+        # dev-v0.1.2: Make subtitle_file optional (only required if NOT changing offset)
+        self.fields['subtitle_file'].required = False
 
         self.helper = FormHelper()
         self.helper.form_tag = True
@@ -355,9 +384,29 @@ class SubtitleForm(forms.ModelForm):
         self.helper.layout = Layout(
             CustomField('subtitle_file'),
             CustomField('language'),
+            CustomField('subtitle_timing_offset'),  # dev-v0.1.2: Add offset field
         )
 
         self.helper.layout.append(FormActions(Submit('submit', 'Submit', css_class='primaryAction')))
+
+    def clean(self):
+        """dev-v0.1.2: Validate that either file is uploaded OR offset is changed"""
+        cleaned_data = super().clean()
+        subtitle_file = cleaned_data.get('subtitle_file')
+        new_offset = cleaned_data.get('subtitle_timing_offset', 0.0)
+        old_offset = self.media_item.subtitle_timing_offset
+        
+        # If offset changed, we don't need a file
+        if new_offset != old_offset:
+            return cleaned_data
+        
+        # If offset didn't change, we need a file
+        if not subtitle_file:
+            raise forms.ValidationError(
+                "Please either upload a subtitle file or change the timing offset value."
+            )
+        
+        return cleaned_data
 
     def save(self, *args, **kwargs):
         self.instance.user = self.instance.media.user

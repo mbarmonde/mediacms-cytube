@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+
+# dev-v0.1.0 - Update add_subtitle View to Handle Offset Changes
+
+#####
+# v0.1.0 - Initial release
+#####
+
+# Stored at: /mediacms/files/views/pages.py
+
 import json
 import os
 
@@ -86,7 +96,7 @@ def setlanguage(request):
 
 @login_required
 def add_subtitle(request):
-    """Add subtitle view"""
+    """Add subtitle view - dev-v0.1.1: Added auto-refresh on offset change"""
 
     friendly_token = request.GET.get("m", "").strip()
     if not friendly_token:
@@ -108,6 +118,50 @@ def add_subtitle(request):
         if 'submit' in request.POST:
             form = SubtitleForm(media, request.POST, request.FILES, prefix="form")
             if form.is_valid():
+                # dev-v0.1.1: Check if timing offset changed
+                new_offset = form.cleaned_data.get('subtitle_timing_offset', 0.0)
+                old_offset = media.subtitle_timing_offset
+                offset_changed = (new_offset != old_offset)
+                
+                # dev-v0.1.1: Update timing offset if changed
+                if offset_changed:
+                    media.subtitle_timing_offset = new_offset
+                    media.save(update_fields=['subtitle_timing_offset'])
+                    
+                    # dev-v0.1.1: Auto-delete existing subtitles
+                    deleted_count = media.subtitles.count()
+                    media.subtitles.all().delete()
+                    
+                    # dev-v0.1.1: Auto-trigger subtitle re-fetch
+                    try:
+                        from subtitle_fetcher import fetch_subtitle_for_media
+                        result = fetch_subtitle_for_media(media)
+                        
+                        if result:
+                            messages.add_message(
+                                request, 
+                                messages.SUCCESS, 
+                                f"✅ Subtitle timing offset updated to {new_offset:+.1f}s. "
+                                f"Deleted {deleted_count} old subtitle(s) and fetched new subtitle with adjusted timing."
+                            )
+                        else:
+                            messages.add_message(
+                                request, 
+                                messages.WARNING, 
+                                f"⚠️ Subtitle timing offset updated to {new_offset:+.1f}s. "
+                                f"Deleted {deleted_count} old subtitle(s) but automatic re-fetch found no matches. "
+                                f"You can manually upload a subtitle file below."
+                            )
+                    except Exception as e:
+                        messages.add_message(
+                            request, 
+                            messages.ERROR, 
+                            f"❌ Timing offset updated but auto-fetch failed: {str(e)}"
+                        )
+                    
+                    return HttpResponseRedirect(f"{media.add_subtitle_url}")
+                
+                # dev-v0.1.1: Normal subtitle upload flow (when offset didn't change)
                 subtitle = form.save()
                 try:
                     subtitle.convert_to_srt()
