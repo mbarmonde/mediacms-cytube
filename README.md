@@ -1,4 +1,4 @@
-  # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/09/2026
+  # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/14/2026
   
   [![GitHub license](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/mediacms-io/mediacms/main/LICENSE.txt)
 [![Releases](https://img.shields.io/github/v/release/mediacms-io/mediacms?color=green)](https://github.com/mediacms-io/mediacms/releases/)
@@ -76,6 +76,13 @@ ADMIN_PASSWORD=YourSecurePassword123     # ← Your secure password (8+ chars)
 # NOTE: Use quotes for values containing spaces
 CYTUBE_DESCRIPTION="Custom MediaCMS streaming server for CyTube integration"
 CYTUBE_ORGANIZATION="MediaCMS-CyTube"
+
+# ============================================
+# OPENSUBTITLES.COM API CONFIGURATION
+# ============================================
+
+OPENSUBTITLES_JWT_TOKEN=YOUR_PERMANENT_JWT_TOKEN_HERE
+OPENSUBTITLES_API_KEY=YOU_API_KEY
  ```
  
  3. Make the validate script executable and run the validation. If validation fails, fix the errors shown and run again.
@@ -123,6 +130,7 @@ Before going live, verify:
 - Ports 80/443 are open
 - env file configured with real values
 - validate-env.sh passes
+- You've configured a new extended mount point at /mnt/ebs (required for this project; made for setting up on a VPS with extended movie storage based on sizing guidelines for encoding (A general rule is to multiply by three the size of the expected uploaded videos (since the system keeps original versions, encoded versions plus HLS))
 - All containers show Up status
 - HTTPS certificate generated (check browser)
 - Can login to web interface
@@ -138,6 +146,7 @@ Before going live, verify:
  ## MediaCMS for CyTube Key Changes
 
   This fork of MediaCMS features integration for CyTube, including:
+- **Auto Subtitles from OPenSubtitles.com** - Use .env file to set variables, upload a move, rename it to ensure it's found (movie-name.year) - Added 02/14/2026  
 - **All-in-One Setup Script** - Use .env file to set variables for the project and run a single script to get things going - Added 02/09/2026
 - **Subtitle Inclusion** - Via native MediaCMS processes and included with the JSON payload for CyTube - Added 02/09/2026
 - **Adaptive Bitrate streaming** - Enabled 480p, 720p, and 1080p encoding with adaptive bitrate streaming for CyTube. MediaCMS encodes all uploads to H.264 HLS with 6-second segments using veryfast preset - Added 02/06/2026
@@ -164,20 +173,26 @@ Before going live, verify:
 4. HLS segments generated (6-second chunks)
    ├─→ Saved to: /mnt/ebs/mediacms_media/hls/{hash}/
    └─→ Creates: master.m3u8 + variant playlists
+5. Auto Subtitle fetch based on Title name from OpenSubtitles.com*
+   ├─→ Fetches and Creates: {hash}.vtt 
+   └─→ Saved to: /mnt/ebs/mediacms_media/original/subtitles/user/(username who uploaded the movie)/{hash}.vtt
    ↓
-5. User clicks "Export to CyTube" button on video page
+6. User clicks "Export to CyTube" button on video page
    ↓
-6. custom_api.py generates CyTube manifest JSON
+7. custom_api.py generates CyTube manifest JSON
    ├─→ Detects available resolutions
    ├─→ Includes subtitle tracks (if uploaded)
    └─→ Saves to: /mnt/ebs/mediacms_media/cytube_manifests/
    ↓
-7. User pastes manifest URL in CyTube
+8. User pastes manifest URL in CyTube
    ↓
-8. CyTube fetches JSON, parses sources array
+9. CyTube fetches JSON, parses sources array
    ↓
-9. Video player loads HLS stream with quality selector
-   └─→ Users can switch between 480p/720p/1080p in real-time
+10. Video player loads HLS stream with quality selector
+   ├─→ Users can switch between 480p/720p/1080p in real-time
+   └─→ Users can choose to turn on subtitles
+   
+*Can be disabled via .env: changing OPENSUBTITLES_AUTO_DOWNLOAD=false
 ```
 
  ## First Video Upload Test
@@ -212,7 +227,7 @@ Once encoding completes:
  ```
  
  ## Example JSON Payload
-**Here is a result of a .json example file** encoded dynamically based on native resoltions for CyTube that's publicly accessibly at: https://YOUR.DOMAIN.COM/media/custom/(manifest).json which I can play in CyTube via Caddy to MediaCMS:
+**Here is a result of a .json example file** encoded dynamically based on native resolutions for CyTube that's publicly accessibly at: https://YOUR.DOMAIN.COM/media/custom/(manifest).json which I can play in CyTube via Caddy to MediaCMS:
 
 ```
 {
