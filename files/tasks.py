@@ -1,9 +1,10 @@
-# dev-v0.1.2 - Added media.save() after encoding completion to trigger subtitle fetch signal
+# dev-v0.1.3 - Added media.save() after encoding completion to trigger subtitle fetch signal
 
 #####
-# v0.1.2 -Added more logging to post encode actions
-# v0.1.1 -Added media.set_encoding_status() + media.save() after encoding completion to trigger subtitle fetch signal
-# v0.1.0 -Initial release - Added media.save() after encoding completion to trigger subtitle fetch signal
+# v0.1.3 - Call post_encode_actions when ALL encodings complete
+# v0.1.2 - Added more logging to post encode actions
+# v0.1.1 - Added media.set_encoding_status() + media.save() after encoding completion to trigger subtitle fetch signal
+# v0.1.0 - Initial release - Added media.save() after encoding completion to trigger subtitle fetch signal
 #####
 
 import json
@@ -479,7 +480,7 @@ def encode_media(
         except BaseException:
             pass
 
-        # dev-v0.1.9: Call post_encode_actions when ALL encodings complete
+        # dev-v0.1.3: Call post_encode_actions when ALL encodings complete
         if success and not chunk:
             try:
                 media.refresh_from_db()
