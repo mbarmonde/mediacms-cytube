@@ -178,6 +178,7 @@ Before going live, verify:
 4. HLS segments generated (6-second chunks)
    ├─→ Saved to: /mnt/ebs/mediacms_media/hls/{hash}/
    └─→ Creates: master.m3u8 + variant playlists
+   ↓
 5. Auto Subtitle fetch based on Title name from OpenSubtitles.com*
    ├─→ Fetches and Creates: {hash}.vtt 
    └─→ Saved to: /mnt/ebs/mediacms_media/original/subtitles/user/(username who uploaded the movie)/{hash}.vtt
