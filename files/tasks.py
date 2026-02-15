@@ -1,3 +1,11 @@
+# dev-v0.1.2 - Added media.save() after encoding completion to trigger subtitle fetch signal
+
+#####
+# v0.1.2 -Added more logging to post encode actions
+# v0.1.1 -Added media.set_encoding_status() + media.save() after encoding completion to trigger subtitle fetch signal
+# v0.1.0 -Initial release - Added media.save() after encoding completion to trigger subtitle fetch signal
+#####
+
 import json
 import os
 import re
@@ -228,7 +236,9 @@ class EncodingTask(Task):
                 kill_ffmpeg_process(self.encoding.temp_file)
                 kill_ffmpeg_process(self.encoding.chunk_file_path)
                 if hasattr(self.encoding, "media"):
+                    logger.info(f"🔍 Calling post_encode_actions for {self.encoding.media.friendly_token}")
                     self.encoding.media.post_encode_actions()
+                    logger.info(f"✅ post_encode_actions completed for {self.encoding.media.friendly_token}")
         except BaseException:
             pass
         return False
@@ -342,6 +352,11 @@ def encode_media(
                 encoding.status = "success"
                 encoding.media_file.save(content=myfile, name=tf)
                 rm_file(tf)
+                
+                # dev-v0.1.1: Trigger subtitle fetch after GIF encoding completes
+                media.refresh_from_db()
+                media.save()
+                
                 return True
         else:
             return False
@@ -400,7 +415,7 @@ def encode_media(
                             if n_times % 60 == 0:
                                 encoding.progress = percent
                                 encoding.save(update_fields=["progress", "update_date"])
-                                logger.info(f"Saved {round(percent, 2)}")
+                                logger.info(f"Saved {round(percent, 2)} - FFmpeg: {output.strip()}")
                             n_times += 1
                     except DatabaseError:
                         # primary reason for this is that the encoding has been deleted, because
@@ -463,6 +478,16 @@ def encode_media(
         # since we delete the encoding at that stage
         except BaseException:
             pass
+
+        # dev-v0.1.9: Call post_encode_actions when ALL encodings complete
+        if success and not chunk:
+            try:
+                media.refresh_from_db()
+                logger.info(f"🔍 Calling post_encode_actions for {friendly_token}")
+                media.post_encode_actions()
+                logger.info(f"✅ post_encode_actions completed for {friendly_token}")
+            except Exception as e:
+                logger.error(f"Failed to call post_encode_actions: {e}")
 
         return success
 

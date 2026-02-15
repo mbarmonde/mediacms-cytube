@@ -1,6 +1,7 @@
-# dev-v0.4.0 - Container orchestration tied to .env for inputs
+# dev-v0.4.1 - Container orchestration tied to .env for inputs
 
 #####
+# v0.4.1 - Added env_file variable to the celery_worker service to call the .env file directly for subtitles
 # v0.4.0 - Added env_file variable to the web service to call the .env file directly for subtitles
 # v0.3.9 - CRITICAL FIX: Pass DOMAIN to all Python containers
 # - Added DOMAIN, CYTUBE_DESCRIPTION, CYTUBE_ORGANIZATION to web, celery_beat, celery_worker
@@ -120,6 +121,8 @@ services:
     volumes:
       - ./:/home/mediacms.io/mediacms/
       - ${MEDIA_FILES_PATH}:/home/mediacms.io/mediacms/media_files
+    env_file:
+      - .env
     environment:
       ENABLE_UWSGI: 'no'
       ENABLE_NGINX: 'no'

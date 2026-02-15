@@ -151,7 +151,7 @@ FFMPEG_H264_PROFILE = "main"
 
 # Use CRF (Constant Rate Factor) for quality-based encoding
 # CRF 23 is the default - good quality with reasonable file sizes
-FFMPEG_CRF = 21
+FFMPEG_CRF = 22
 
 # CRITICAL: Force AAC audio codec (required for HLS)
 # This ensures all videos have compatible audio regardless of source

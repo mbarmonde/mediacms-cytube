@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-# dev-v0.1.5 - Smart encode modifications and auto subtitles
+# dev-v0.1.8 - Direct subtitle fetch in post_encode_actions (more reliable than signal)
 
 #####
+# v0.1.8 - Removed status transition check (fetch on every post_encode_actions if no subs)
+# v0.1.7 - Direct subtitle fetch in post_encode_actions method for reliability
+# v0.1.6 - Fixed subtitle fetch to trigger after chunk encoding completes
 # v0.1.5 - Added an enhanced function replacement to subtitle function
 # v0.1.4 - Added logging to subtitle function
 # v0.1.3 - Fixed signal to check encoding_status instead of state
@@ -641,7 +644,9 @@ class Media(models.Model):
         whether it has failed or succeeded
         """
 
+        old_status = self.encoding_status  # dev-v0.1.7: Track status changes
         self.set_encoding_status()
+        new_status = self.encoding_status
 
         # set a preview url
         if encoding:
@@ -650,6 +655,20 @@ class Media(models.Model):
                     self.preview_file_path = ""
                 else:
                     self.preview_file_path = encoding.media_file.path
+
+        # dev-v0.1.8: Trigger subtitle fetch when encoding is complete (removed status change check)
+        if new_status == 'success' and not self.subtitles.exists():
+            logger.info(f"🎬 Encoding complete ({old_status} → {new_status}). Fetching subtitle for: {self.friendly_token}")
+            try:
+                from subtitle_fetcher import fetch_subtitle_for_media, ENABLED
+                if ENABLED and not self.subtitles.exists():
+                    result = fetch_subtitle_for_media(self)
+                    if result:
+                        logger.info(f"✅ Auto-fetched subtitle: {result.get('path')}")
+                    else:
+                        logger.info(f"⚠️ No subtitle found for: {self.title}")
+            except Exception as e:
+                logger.error(f"❌ Subtitle fetch failed: {e}")
 
         self.save(update_fields=["encoding_status", "listable", "preview_file_path"])
 
@@ -1118,88 +1137,45 @@ def media_m2m(sender, instance, **kwargs):
     if instance.tags.all():
         for tag in instance.tags.all():
             tag.update_tag_media()
-            
-# =============================================================================
-# OPENSUBTITLES INTEGRATION
-# =============================================================================
-# Automatic subtitle fetching after video encoding completes
-# Uses post_save signal to trigger subtitle download from OpenSubtitles.com
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-import logging
 
-logger = logging.getLogger(__name__)
+# =============================================================================
+# OPENSUBTITLES INTEGRATION (BACKUP SIGNAL - Primary method in post_encode_actions)
+# =============================================================================
+# Kept as fallback, but primary subtitle fetch now happens in post_encode_actions()
 
 @receiver(post_save, sender=Media)
 def auto_fetch_subtitles(sender, instance, created, **kwargs):
     """
-    Django signal: Automatically fetch subtitles after encoding completes.
+    Django signal: Backup automatic subtitle fetch (primary method in post_encode_actions).
     
-    Triggered on every Media.save(), but only executes when:
-    - Encoding has completed successfully (encoding_status == 'success')
-    - No subtitles already exist (prevents duplicates)
-    - OpenSubtitles integration is enabled
-    - This is not a new upload (encoding must be complete)
-    
-    Args:
-        sender: Media model class
-        instance: The Media object being saved
-        created: Boolean, True if this is a new object
-        **kwargs: Additional signal arguments
+    This signal serves as a fallback in case post_encode_actions doesn't trigger.
+    The primary subtitle fetch happens directly in post_encode_actions() for better reliability.
     """
-    # FIRST LINE - Always log that signal was triggered
-    print(f"🔔 AUTO_FETCH_SUBTITLES SIGNAL CALLED: {instance.title}")
+    # Skip if this is a new upload
+    if created:
+        return
     
-    # Import here to avoid circular imports and to fail gracefully if module missing
+    # Skip if encoding not complete
+    if not hasattr(instance, 'encoding_status') or instance.encoding_status != 'success':
+        return
+    
+    # Skip if subtitles already exist
+    if instance.subtitles.exists():
+        return
+    
+    # Import and check if enabled
     try:
         from subtitle_fetcher import fetch_subtitle_for_media, ENABLED
-        print(f"✅ Import successful, ENABLED={ENABLED}")
-    except ImportError as e:
-        print(f"❌ Failed to import subtitle_fetcher: {e}")
+        if not ENABLED:
+            return
+    except ImportError:
         return
     
-    # Check if feature is enabled first (before any other checks)
-    if not ENABLED:
-        print("⚠️ OpenSubtitles integration is disabled")
-        return
-    
-    # Skip if this is a brand new upload (no encoding yet)
-    if created:
-        print(f"🆕 Skipping subtitle fetch for new upload: {instance.title}")
-        return
-    
-    # Skip if encoding not complete or failed
-    if not hasattr(instance, 'encoding_status') or instance.encoding_status != 'success':
-        print(f"⏳ Skipping subtitle fetch - encoding_status is '{getattr(instance, 'encoding_status', 'unknown')}': {instance.title}")
-        return
-    
-    # Check if subtitles already exist (prevents re-fetching on every save)
-    if instance.subtitles.exists():
-        print(f"📝 Media '{instance.title}' already has {instance.subtitles.count()} subtitle(s), skipping fetch")
-        return
-    
-    print(f"🎬 Triggering automatic subtitle fetch for: {instance.title}")
-    
+    # Fetch subtitle as backup
     try:
-        # Fetch subtitle from OpenSubtitles
         result = fetch_subtitle_for_media(instance)
-        
         if result:
-            subtitle_path = result.get('path')
-            language = result.get('language', 'en')
-            release_name = result.get('release', 'unknown')
-            
-            print(f"✅ Successfully fetched subtitle for '{instance.title}': {subtitle_path}")
-            print(f"  📦 Release: {release_name}")
-            print(f"  🌐 Language: {language}")
-            
-        else:
-            print(f"⚠️  No suitable subtitle found for: {instance.title}")
-            
+            logger.info(f"✅ Backup signal fetched subtitle for: {instance.title}")
     except Exception as e:
-        # Don't let subtitle fetching errors break media processing
-        print(f"❌ Error fetching subtitle for '{instance.title}': {e}")
-        import traceback
-        traceback.print_exc()
-
+        logger.error(f"❌ Backup signal subtitle fetch failed: {e}")

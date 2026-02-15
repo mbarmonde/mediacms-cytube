@@ -1,7 +1,8 @@
-# dev-v0.1.5 - OpenSubtitles.com API Integration for MediaCMS
+# dev-v0.1.6 - OpenSubtitles.com API Integration for MediaCMS
 
 #!/usr/bin/env python3
 # subtitle_fetcher.py - OpenSubtitles.com API Integration for MediaCMS
+# v0.1.6 - Added SRT to WebVTT conversion for CyTube compatibility
 # v0.1.5 - Fixed Language model to use .title instead of .name (versions v0.1.3, and v0.1.4 didnt work)
 # v0.1.2 - Corrected the subtitle path to be exact based on MediaCMs defaults
 # v0.1.1 - Changed the subtitle path to be exact based on MediaCMs defaults
@@ -20,7 +21,8 @@ Workflow:
 1. parse_filename() - Extract title, year from "Movie.Name.2023.1080p.mkv"
 2. search_subtitles() - Query OpenSubtitles API for matches
 3. download_subtitle() - Download best match and save to storage
-4. fetch_subtitle_for_media() - Main entry point (called by Django signal)
+4. convert_srt_to_vtt() - Convert SRT format to WebVTT for video.js compatibility
+5. fetch_subtitle_for_media() - Main entry point (called by Django signal)
 
 Authentication:
 - Uses permanent JWT token from OpenSubtitles.com user profile
@@ -214,9 +216,63 @@ def search_subtitles(title: str, year: Optional[str] = None, language: str = 'en
         raise OpenSubtitlesError(f"API request failed: {e}")
 
 
+def convert_srt_to_vtt(srt_content: bytes) -> str:
+    """
+    Convert SRT subtitle format to WebVTT format for video.js compatibility.
+    
+    SRT Format:
+        1
+        00:00:20,000 --> 00:00:24,400
+        Senator, we're making our final approach into Coruscant.
+        
+    WebVTT Format:
+        WEBVTT
+        
+        1
+        00:00:20.000 --> 00:00:24.400
+        Senator, we're making our final approach into Coruscant.
+    
+    Args:
+        srt_content: Raw SRT file content as bytes
+        
+    Returns:
+        WebVTT formatted string
+        
+    Raises:
+        Exception: If conversion fails
+    """
+    try:
+        # Decode content, handling common encodings and BOM
+        try:
+            text = srt_content.decode('utf-8-sig')  # Remove UTF-8 BOM if present
+        except UnicodeDecodeError:
+            try:
+                text = srt_content.decode('latin-1')
+            except UnicodeDecodeError:
+                text = srt_content.decode('cp1252')  # Windows encoding
+        
+        # Start with WebVTT header
+        vtt_content = "WEBVTT\n\n"
+        
+        # Replace timestamp format: SRT uses ',' for milliseconds, VTT uses '.'
+        # SRT: 00:00:20,000 --> 00:00:24,400
+        # VTT: 00:00:20.000 --> 00:00:24.400
+        text = re.sub(r'(\d{2}:\d{2}:\d{2}),(\d{3})', r'\1.\2', text)
+        
+        # Add converted content
+        vtt_content += text
+        
+        logger.info("Successfully converted SRT to WebVTT format")
+        return vtt_content
+        
+    except Exception as e:
+        logger.error(f"SRT to VTT conversion failed: {e}")
+        raise OpenSubtitlesError(f"Subtitle conversion failed: {e}")
+
+
 def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str) -> Optional[str]:
     """
-    Download subtitle file from OpenSubtitles.com.
+    Download subtitle file from OpenSubtitles.com and convert to WebVTT.
     
     Args:
         file_id: OpenSubtitles file ID from search results
@@ -224,11 +280,11 @@ def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str) 
         filename_prefix: Prefix for saved file (usually original video filename)
         
     Returns:
-        Full path to downloaded subtitle file, or None if download fails
+        Full path to downloaded subtitle file (.vtt), or None if download fails
         
     Raises:
         QuotaExceededError: If daily download quota exceeded
-        OpenSubtitlesError: If download fails
+        OpenSubtitlesError: If download or conversion fails
     """
     try:
         headers = get_api_headers()
@@ -266,21 +322,22 @@ def download_subtitle(file_id: str, destination_dir: str, filename_prefix: str) 
         file_response = requests.get(download_url, timeout=30)
         file_response.raise_for_status()
         
-        # Determine file extension from original filename
-        ext = Path(original_filename).suffix or '.srt'
+        # Convert SRT to WebVTT
+        logger.info("Converting SRT to WebVTT format...")
+        vtt_content = convert_srt_to_vtt(file_response.content)
         
         # Create destination directory if it doesn't exist
         os.makedirs(destination_dir, exist_ok=True)
         
-        # Save file with prefix from original video
-        dest_filename = f"{filename_prefix}{ext}"
+        # Save as .vtt file
+        dest_filename = f"{filename_prefix}.vtt"
         dest_path = os.path.join(destination_dir, dest_filename)
         
-        with open(dest_path, 'wb') as f:
-            f.write(file_response.content)
+        with open(dest_path, 'w', encoding='utf-8') as f:
+            f.write(vtt_content)
         
-        file_size = len(file_response.content)
-        logger.info(f"Subtitle downloaded successfully: {dest_path} ({file_size} bytes)")
+        file_size = len(vtt_content.encode('utf-8'))
+        logger.info(f"Subtitle converted and saved as WebVTT: {dest_path} ({file_size} bytes)")
         
         return dest_path
         
@@ -361,7 +418,7 @@ def fetch_subtitle_for_media(media_object) -> Optional[Dict[str, str]]:
         # Use media hash as filename prefix
         filename_prefix = str(media_object.uid).replace('-', '')
         
-        # Download subtitle
+        # Download subtitle (now returns .vtt file)
         subtitle_path = download_subtitle(file_id, dest_dir, filename_prefix)
         
         if not subtitle_path:
