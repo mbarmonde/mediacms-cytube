@@ -1,4 +1,4 @@
-  # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/14/2026
+  # Dev-Branch MediaCMS for CyTube (MediaCMS 7.7) - Updated 2/15/2026
   
   [![GitHub license](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://raw.githubusercontent.com/mediacms-io/mediacms/main/LICENSE.txt)
 [![Releases](https://img.shields.io/github/v/release/mediacms-io/mediacms?color=green)](https://github.com/mediacms-io/mediacms/releases/)
@@ -83,6 +83,9 @@ CYTUBE_ORGANIZATION="MediaCMS-CyTube"
 
 OPENSUBTITLES_JWT_TOKEN=YOUR_PERMANENT_JWT_TOKEN_HERE
 OPENSUBTITLES_API_KEY=YOU_API_KEY
+
+# Optional to turn OFF auto-download feature
+OPENSUBTITLES_ENABLED=true
  ```
  
  3. Make the validate script executable and run the validation. If validation fails, fix the errors shown and run again.
@@ -146,6 +149,8 @@ Before going live, verify:
  ## MediaCMS for CyTube Key Changes
 
   This fork of MediaCMS features integration for CyTube, including:
+- **Subtitles Offset in UI** -  (edit video > Captions) when complete; Subtitle Timing Offset (seconds) - Adjust subtitle timing: negative delays subtitles (e.g., -4.5), positive advances them. Changes auto-refresh subtitles. - Added 02/15/2026
+- **Subtitles from OpenSubtitles.com Dev API** - Use .env file to set variables, upload a move, rename it to ensure it's found (movie-name.year) - Added 02/14/2026  
 - **Auto Subtitles from OPenSubtitles.com** - Use .env file to set variables, upload a move, rename it to ensure it's found (movie-name.year) - Added 02/14/2026  
 - **All-in-One Setup Script** - Use .env file to set variables for the project and run a single script to get things going - Added 02/09/2026
 - **Subtitle Inclusion** - Via native MediaCMS processes and included with the JSON payload for CyTube - Added 02/09/2026
@@ -291,7 +296,6 @@ Once encoding completes:
 | Docker Compose | Latest | Container orchestration |
 
   ## MediaCMS for CyTube Change-File List
-  Updated 2/14/2026
   
 ```
 === DEVELOPMENT VERSIONS (dev-vX.X.X) ===
@@ -310,9 +314,12 @@ deploy/
 │   │   ├── nginx_http_only.conf                  # dev-v0.1.0
 ├── docker-compose.yaml                           # dev-v0.4.1
 files/
+│   ├── forms.py                                  # dev-v0.1.3
 │   ├── models/
-│   │   ├── media.py                              # dev-v0.1.8
+│   │   ├── media.py                              # dev-v0.1.9
 │   ├── tasks.py                                  # dev-v0.1.3
+│   ├── views/
+│   │   ├── pages.py                              # dev-v0.1.0
 scripts/
 │   ├── docker-healthcheck.sh                     # dev-v0.5.3
 │   ├── init_subtitle_languages.sh                # dev-v0.1.3
@@ -321,7 +328,7 @@ static/
 │   ├── js/
 │   │   ├── cytube-export.js                      # dev-v0.1.0
 │   │   ├── encoding-status.js                    # dev-v0.1.7
-├── subtitle_fetcher.py                           # dev-v0.1.6
+├── subtitle_fetcher.py                           # dev-v0.1.7
 templates/
 │   ├── root.html                                 # dev-v0.1.0
 ├── test_opensubtitles.py                         # dev-v0.1.2
