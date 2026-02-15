@@ -285,7 +285,7 @@ Once encoding completes:
 caddy/
 │   ├── Caddyfile                                 # dev-v0.4.0
 cms/
-│   ├── urls.py                                   # dev-v0.0.1
+│   ├── urls.py                                   # dev-v0.1.0
 ├── custom_api.py                                 # dev-v0.6.0
 ├── custom_urls.py                                # dev-v0.1.3
 ├── cytube-execute-all-sh-and-storage-init.sh     # dev-v0.3.0
@@ -293,10 +293,11 @@ deploy/
 │   ├── docker/
 │   │   ├── local_settings.py                     # dev-v0.2.4
 │   │   ├── nginx_http_only.conf                  # dev-v0.1.0
-├── docker-compose.yaml                           # dev-v0.4.0
+├── docker-compose.yaml                           # dev-v0.4.1
 files/
 │   ├── models/
-│   │   ├── media.py                              # dev-v0.1.5
+│   │   ├── media.py                              # dev-v0.1.8
+│   ├── tasks.py                                  # dev-v0.1.3
 scripts/
 │   ├── docker-healthcheck.sh                     # dev-v0.5.3
 │   ├── init_subtitle_languages.sh                # dev-v0.1.3
@@ -305,13 +306,12 @@ static/
 │   ├── js/
 │   │   ├── cytube-export.js                      # dev-v0.1.0
 │   │   ├── encoding-status.js                    # dev-v0.1.7
-├── subtitle_fetcher.py                           # dev-v0.1.5
+├── subtitle_fetcher.py                           # dev-v0.1.6
 templates/
 │   ├── root.html                                 # dev-v0.1.0
 ├── test_opensubtitles.py                         # dev-v0.1.2
 ├── test_subtitle_fetcher_standalone.py           # dev-v0.1.0
 ├── validate-env.sh                               # dev-v0.1.1
-```
 
   ## MediaCMS for CyTube Storage Architecture for Block Storage
   Note: The default is /mnt/ebs/mediacms_media. If using a different path, update MEDIA_FILES_PATH in .env
