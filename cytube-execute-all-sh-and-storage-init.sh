@@ -1,47 +1,57 @@
 #!/bin/bash
 
-# dev-v0.3.0 - Initializes storage file system, starts containers, creates subtitle languages
+# dev-v0.4.0 - Added makemigrations --check guard before subtitle init
 
 #####
+# CHANGELOG
+# v0.4.0 - MIGRATION DRIFT GUARD
+#   - Added Step 5.5: makemigrations --check after containers are healthy
+#   - Detects model changes that have no corresponding migration file
+#   - Blocks startup with clear instructions if drift is detected
+#   - Prevents "column does not exist" 500 errors on fresh deploys
+#   - Zero behavior change when migrations are in sync (normal case)
 # v0.3.0 - SUBTITLE LANGUAGE AUTO-INITIALIZATION
-# - Added automatic subtitle language population after container startup
-# - Added container health checks with retry logic
-# - Waits for database to be fully ready before language initialization
-# - Integrated init_subtitle_languages.sh execution
+#   - Added automatic subtitle language population after container startup
+#   - Added container health checks with retry logic
+#   - Waits for database to be fully ready before language initialization
+#   - Integrated init_subtitle_languages.sh execution
 # v0.2.0 - CENTRALIZED CONFIGURATION VALIDATION
-# - Added environment validation before container startup
-# - Validates .env file for DOMAIN, ADMIN_USER, ADMIN_EMAIL, ADMIN_PASSWORD
-# - Prevents startup with invalid/missing configuration
-# - Exits with clear error messages if validation fails
+#   - Added environment validation before container startup
+#   - Validates .env file for DOMAIN, ADMIN_USER, ADMIN_EMAIL, ADMIN_PASSWORD
+#   - Prevents startup with invalid/missing configuration
+#   - Exits with clear error messages if validation fails
 # v0.1.6 - fixed path issues by commenting out folder locations
-# v0.1.5 - Integrated all files into GitHub pull - Only for chmod all files to execute and storage config
+# v0.1.5 - Integrated all files into GitHub pull
 # v0.1.4 - Final script for alt root folder copy
-##### Run Flow
-#Step 1: Validate .env configuration
-#  ↓ (exits if invalid)
-#Step 2: Make all .sh files executable
-#  ↓
-#Step 3: Run storage initialization
-#  ↓
-#Step 4: Start Docker containers
-#  ↓
-#Step 5: Wait for containers to be healthy
-#  ├─ Wait for database container (30s timeout)
-#  ├─ Wait for web container (30s timeout)
-#  └─ Wait for database migrations (120s timeout)
-#  ↓
-#Step 6: Initialize subtitle languages (automatic)
-#  ├─ Detects database container
-#  ├─ Checks if languages already exist
-#  └─ Inserts 20 languages if needed
-#  ↓
-#✅ Success message with URL and credentials
 #####
 
-# chmod +x (filename).sh to make executable
-#./(filename) to run in CLI
+##### Run Flow
+# Step 1: Validate .env configuration
+#   ↓ (exits if invalid)
+# Step 2: Make all .sh files executable
+#   ↓
+# Step 3: Run storage initialization
+#   ↓
+# Step 4: Start Docker containers
+#   ↓
+# Step 5: Wait for containers to be healthy
+#   ├─ Wait for database container (30s timeout)
+#   ├─ Wait for web container (30s timeout)
+#   └─ Wait for database migrations (120s timeout)
+#   ↓
+# Step 5.5: Migration drift check
+#   ├─ Runs makemigrations --check inside media_cms container
+#   ├─ Exits with instructions if model changes lack migration files
+#   └─ Passes silently if all models have migrations
+#   ↓
+# Step 6: Initialize subtitle languages (automatic)
+#   ├─ Detects database container
+#   ├─ Checks if languages already exist
+#   └─ Inserts 20 languages if needed
+#   ↓
+# ✅ Success message with URL and credentials
+#####
 
-## Define destination directory
 DEST_DIR="/mediacms"
 
 echo "========================================"
@@ -111,13 +121,11 @@ echo "----------------------------------------"
 
 cd "$DEST_DIR"
 
-# Check if docker-compose.yaml exists
 if [ ! -f "docker-compose.yaml" ]; then
     echo "❌ ERROR: docker-compose.yaml not found in $DEST_DIR"
     exit 1
 fi
 
-# Start containers
 echo "Running: docker-compose up -d"
 docker-compose up -d
 
@@ -145,7 +153,6 @@ echo ""
 echo "STEP 5: Waiting for containers to be ready..."
 echo "----------------------------------------"
 
-# Function to check if a container is running
 check_container() {
     local container_name=$1
     if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
@@ -196,16 +203,14 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     exit 1
 fi
 
-# Wait for database to be ready (accepting connections)
+# Wait for database to be ready and migrations complete
 echo -n "Waiting for database migrations to complete"
 RETRY_COUNT=0
-MAX_DB_RETRIES=60  # 2 minutes for migrations
+MAX_DB_RETRIES=60
 
 while [ $RETRY_COUNT -lt $MAX_DB_RETRIES ]; do
-    # Try to connect to database
     if docker exec mediacms_db psql -U mediacms -d mediacms -c "SELECT 1;" > /dev/null 2>&1 || \
        docker exec mediacms-db-1 psql -U mediacms -d mediacms -c "SELECT 1;" > /dev/null 2>&1; then
-        # Check if files_language table exists (indicates migrations are done)
         if docker exec mediacms_db psql -U mediacms -d mediacms -c "SELECT 1 FROM files_language LIMIT 1;" > /dev/null 2>&1 || \
            docker exec mediacms-db-1 psql -U mediacms -d mediacms -c "SELECT 1 FROM files_language LIMIT 1;" > /dev/null 2>&1; then
             echo " ✅"
@@ -227,6 +232,53 @@ else
 fi
 
 # ============================================
+# STEP 5.5: MIGRATION DRIFT CHECK
+# Detects model fields added without a corresponding migration file.
+# Catches the class of bug where a column exists in models.py but not
+# in the database, causing 500 errors on first use of that field.
+# ============================================
+echo "STEP 5.5: Checking for missing migrations..."
+echo "----------------------------------------"
+
+MIGRATION_CHECK_OUTPUT=$(docker exec media_cms python manage.py makemigrations --check 2>&1)
+MIGRATION_CHECK_EXIT=$?
+
+if [ $MIGRATION_CHECK_EXIT -ne 0 ]; then
+    echo ""
+    echo "========================================"
+    echo "❌ MIGRATION DRIFT DETECTED"
+    echo "========================================"
+    echo ""
+    echo "One or more model changes have no corresponding migration file."
+    echo "This will cause 500 errors at runtime when the missing column is queried."
+    echo ""
+    echo "Django output:"
+    echo "$MIGRATION_CHECK_OUTPUT" | grep -v "^✅" | grep -v "^🎬" | grep -v "^📺" | grep -v "^=" | grep -v "^Encoding" | grep -v "^CPU\|^GPU\|^Trans\|^Target\|^H\.\|^Audio\|^HLS\|^Seg"
+    echo ""
+    echo "To fix:"
+    echo "  1. Generate the missing migration:"
+    echo "     docker exec media_cms python manage.py makemigrations"
+    echo ""
+    echo "  2. Copy it out of the container:"
+    echo "     docker exec media_cms python manage.py showmigrations | grep '\\[ \\]'"
+    echo "     # Note the new migration filename, then:"
+    echo "     docker cp media_cms:/home/mediacms.io/mediacms/<app>/migrations/<file>.py \\"
+    echo "       $DEST_DIR/<app>/migrations/<file>.py"
+    echo ""
+    echo "  3. Apply it:"
+    echo "     docker exec media_cms python manage.py migrate"
+    echo ""
+    echo "  4. Commit the migration file to the repo before next deploy"
+    echo ""
+    echo "Startup aborted. Fix migration drift and re-run this script."
+    echo ""
+    exit 1
+else
+    echo "✅ All model migrations are present and accounted for"
+    echo ""
+fi
+
+# ============================================
 # STEP 6: INITIALIZE SUBTITLE LANGUAGES
 # ============================================
 echo "STEP 6: Initializing subtitle languages..."
@@ -235,7 +287,6 @@ echo "----------------------------------------"
 SUBTITLE_INIT_SCRIPT="$DEST_DIR/scripts/init_subtitle_languages.sh"
 
 if [ -f "$SUBTITLE_INIT_SCRIPT" ]; then
-    # Run subtitle initialization
     if "$SUBTITLE_INIT_SCRIPT"; then
         echo ""
     else
@@ -259,7 +310,6 @@ echo "✅ MediaCMS-CyTube Started Successfully"
 echo "========================================"
 echo ""
 
-# Load DOMAIN from .env for display
 if [ -f "$DEST_DIR/.env" ]; then
     set -a
     source "$DEST_DIR/.env"
