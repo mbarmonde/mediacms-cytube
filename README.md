@@ -381,7 +381,7 @@ Host: /mnt/ebs/mediacms_media/     ← or custom MEDIA_FILES_PATH value
   ├── hls/                # HLS segments (hash-based directories)
   ├── original/           # Uploaded files / subtitles
   ├── thumbnails/         # Video thumbnails
-  ├── uploaded/           # Temp uploaded content
+  ├── uploads/            # Temp uploaded content
   └── userlogos/          # User avatars
 
 Container: /home/mediacms.io/mediacms/media_files/ (mounted from above via docker-compose.yaml)
