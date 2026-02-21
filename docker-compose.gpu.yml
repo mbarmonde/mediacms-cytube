@@ -1,0 +1,50 @@
+# docker-compose.gpu.yml
+# dev-v0.1.0 - GPU override for celery_worker (NVIDIA NVENC support)
+
+#####
+# CHANGELOG
+# v0.1.0 - Initial release
+#   - Compose override file for GPU-accelerated encoding
+#   - Adds NVIDIA device reservation to celery_worker only
+#   - Base docker-compose.yaml is NOT modified — CPU deployments unaffected
+#   - Usage: docker compose -f docker-compose.yaml -f docker-compose.gpu.yml up -d
+#   - Requires: nvidia-container-toolkit on host, ENCODING_BACKEND=gpu in .env
+#   - Only celery_worker needs GPU access (all encoding runs in this container)
+#   - web, db, redis, caddy containers are unchanged
+#####
+
+# HOW THIS WORKS:
+# Docker Compose overlay files merge with the base file at the key level.
+# Only keys present here override the base. Everything else in docker-compose.yaml
+# is inherited unchanged.
+#
+# This file adds one block to celery_worker:
+#   deploy.resources.reservations.devices (NVIDIA GPU access)
+#
+# HOST REQUIREMENTS:
+#   1. NVIDIA GPU installed
+#   2. nvidia-container-toolkit installed:
+#      https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+#   3. Docker daemon configured for nvidia runtime:
+#      sudo nvidia-ctk runtime configure --runtime=docker
+#      sudo systemctl restart docker
+#
+# VERIFY GPU ACCESS AFTER STARTING:
+#   docker exec ${CELERY_WORKER_CONTAINER_NAME:-mediacms_celery_worker} nvidia-smi
+#   docker exec ${CELERY_WORKER_CONTAINER_NAME:-mediacms_celery_worker} \
+#     ffmpeg -encoders 2>/dev/null | grep nvenc
+#
+# SWITCH BACK TO CPU:
+#   Change ENCODING_BACKEND=cpu in .env
+#   Start without this override:
+#   docker-compose up -d
+
+services:
+  celery_worker:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video]

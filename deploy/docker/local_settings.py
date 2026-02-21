@@ -1,63 +1,66 @@
-# dev-v0.3.0 - Django settings - centralized configuration via .env
+# dev-v0.4.0 - Added ENCODING_BACKEND and ENCODING_GPU_PRESET for GPU encoding support
 
 #####
+# v0.4.0 - GPU ENCODING SUPPORT (forward-looking)
+#   - Added ENCODING_BACKEND setting (cpu|gpu) - defaults to cpu, no behavior change
+#   - Added ENCODING_GPU_PRESET setting for NVENC preset (p1-p7)
+#   - Both settings passed to helpers.py via Django settings
+#   - CPU path is 100% unchanged when ENCODING_BACKEND=cpu
 # v0.3.0 - FFMPEG ENCODING CONFIGURATION CENTRALIZATION
-# - All encoding settings now read from .env file
-# - Added validation for FFMPEG_* environment variables
-# - Fixes bug where FFMPEG_CRF was ignored (hardcoded in helpers.py)
-# - New settings: FFMPEG_TRANSCODE_ENABLED, FFMPEG_RESOLUTIONS, FFMPEG_PRESET
-# - New settings: FFMPEG_H264_PROFILE, FFMPEG_CRF_H264, FFMPEG_CRF_H265, FFMPEG_CRF_VP9
-# - New settings: FFMPEG_AUDIO_CODEC, FFMPEG_AUDIO_BITRATE
-# - New settings: HLS_ENABLED, HLS_SEGMENT_TIME, HLS_FLAGS
-# - Backward compatible: Falls back to sensible defaults if .env values missing
-# - Comprehensive logging of encoding configuration on startup
+#   - All encoding settings now read from .env file
+#   - Added validation for FFMPEG_* environment variables
+#   - Fixes bug where FFMPEG_CRF was ignored (hardcoded in helpers.py)
+#   - New settings: FFMPEG_TRANSCODE_ENABLED, FFMPEG_RESOLUTIONS, FFMPEG_PRESET
+#   - New settings: FFMPEG_H264_PROFILE, FFMPEG_CRF_H264, FFMPEG_CRF_H265, FFMPEG_CRF_VP9
+#   - New settings: FFMPEG_AUDIO_CODEC, FFMPEG_AUDIO_BITRATE
+#   - New settings: HLS_ENABLED, HLS_SEGMENT_TIME, HLS_FLAGS
+#   - Backward compatible: Falls back to sensible defaults if .env values missing
+#   - Comprehensive logging of encoding configuration on startup
 # v0.2.4 - Modified the OpenSubtitles storage location to OPENSUBTITLES_DOWNLOAD_PATH = '/home/mediacms.io/mediacms/media_files/original/subtitles'
 # v0.2.3 - Modified the OpenSubtitles storage location to a hardcoded location: /mnt/ebs/mediacms_media/original/subtitles/
 # v0.2.2 - JWT TOKEN ENABLED
-# - OPENSUBTITLES_JWT_TOKEN = os.environ.get('OPENSUBTITLES_JWT_TOKEN', '')
+#   - OPENSUBTITLES_JWT_TOKEN = os.environ.get('OPENSUBTITLES_JWT_TOKEN', '')
 # v0.2.1 - OPENSUBTITLES API INTEGRATION + FFMPEG CHANGE
-# - Changed from veryfast to faster (next setting down)
-# - Added OpenSubtitles.com REST API configuration
-# - New settings: OPENSUBTITLES_* variables from .env
-# - Subtitle storage path aligned with existing /mnt/ebs structure
+#   - Changed from veryfast to faster (next setting down)
+#   - Added OpenSubtitles.com REST API configuration
+#   - New settings: OPENSUBTITLES_* variables from .env
+#   - Subtitle storage path aligned with existing /mnt/ebs structure
 # v0.2.0 - CENTRALIZED CONFIGURATION
-# - Replaced hardcoded domain with os.environ.get('DOMAIN')
-# - FRONTEND_HOST now constructed as https://{DOMAIN}
-# - PORTAL_NAME and PORTAL_DESCRIPTION now use CYTUBE_DESCRIPTION from .env
-# - Added environment variable validation
-# - Removed manual Find/Replace requirement for domain and description
+#   - Replaced hardcoded domain with os.environ.get('DOMAIN')
+#   - FRONTEND_HOST now constructed as https://{DOMAIN}
+#   - PORTAL_NAME and PORTAL_DESCRIPTION now use CYTUBE_DESCRIPTION from .env
+#   - Added environment variable validation
+#   - Removed manual Find/Replace requirement for domain and description
 # v0.1.3 - Changed and added to MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 # v0.1.2 - Better search logic for YOUR.DOMAIN.COM and YOUR SERVER DESCRIPTION counts
 # v0.1.1 - Chunk fixes for uploads
-# - UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024 # 10GB
-# - FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024 # 100MB
-# - DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
-# - UPLOAD_CHUNKS = True
-# - UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024 # 50MB chunks
-# - CHUNK_UPLOAD_TIMEOUT = 7200 # 2 hours
+#   - UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024 # 10GB
+#   - FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024 # 100MB
+#   - DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+#   - UPLOAD_CHUNKS = True
+#   - UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024 # 50MB chunks
+#   - CHUNK_UPLOAD_TIMEOUT = 7200 # 2 hours
 # v0.1.0 - MAJOR UPDATE: Enabled HLS streaming for CyTube
-# - Set HLS_ENABLE = True (CyTube supports HLS via application/x-mpegURL)
-# - Set HLS_TIME = 6 (standard 6-second segments)
-# - Set MINIMUM_RESOLUTIONS_TO_ENCODE = [480] (single quality for storage)
-# - Set FFMPEG_DEFAULT_PRESET = "veryfast" (CPU efficiency)
-# - Set FFMPEG_H264_PROFILE = "main" (better compression)
-# - Set FFMPEG_AUDIO_CODEC = "aac" (required for HLS)
-# - Configured for HTTPS delivery (CyTube requirement)
+#   - Set HLS_ENABLE = True (CyTube supports HLS via application/x-mpegURL)
+#   - Set HLS_TIME = 6 (standard 6-second segments)
+#   - Set MINIMUM_RESOLUTIONS_TO_ENCODE = [480] (single quality for storage)
+#   - Set FFMPEG_DEFAULT_PRESET = "veryfast" (CPU efficiency)
+#   - Set FFMPEG_H264_PROFILE = "main" (better compression)
+#   - Set FFMPEG_AUDIO_CODEC = "aac" (required for HLS)
+#   - Configured for HTTPS delivery (CyTube requirement)
 # v0.0.3 - Added FFMPEG_DEFAULT_PRESET = "veryfast"; added 360 to resolutions
 # v0.0.2 - Added MINIMUM_RESOLUTIONS_TO_ENCODE to [480]
 # v0.0.1 - Changed DO_NOT_TRANSCODE_VIDEO to False
 #####
 
 # Stored at: /mediacms/deploy/docker/local_settings.py
-# Configuration now centralized in .env file (DOMAIN, CYTUBE_DESCRIPTION, OPENSUBTITLES_*, FFMPEG_*)
+# Configuration now centralized in .env file (DOMAIN, CYTUBE_DESCRIPTION, OPENSUBTITLES_*, FFMPEG_*, ENCODING_*)
 
 import os
 
 # ============================================
 # ENVIRONMENT VARIABLE VALIDATION
 # ============================================
-# Validate required environment variables on module load
-
 DOMAIN = os.environ.get('DOMAIN')
 if not DOMAIN:
     raise EnvironmentError(
@@ -67,7 +70,6 @@ if not DOMAIN:
         "   See .env file MANUAL CONFIGURATION SECTION."
     )
 
-# Validate domain format (basic check)
 if DOMAIN.startswith('http://') or DOMAIN.startswith('https://'):
     raise ValueError(
         f"❌ DOMAIN should not include protocol (http:// or https://)\n"
@@ -80,10 +82,8 @@ print(f"✅ Local settings initialized with DOMAIN: {DOMAIN}")
 # ============================================
 # CORE DJANGO SETTINGS
 # ============================================
-# Construct FRONTEND_HOST from DOMAIN (HTTPS-only project)
 FRONTEND_HOST = os.getenv('FRONTEND_HOST', f'https://{DOMAIN}')
 
-# Load portal name/description from environment
 CYTUBE_DESCRIPTION = os.environ.get('CYTUBE_DESCRIPTION', 'Custom MediaCMS streaming server')
 PORTAL_NAME = os.getenv('PORTAL_NAME', CYTUBE_DESCRIPTION)
 
@@ -112,7 +112,6 @@ CACHES = {
     }
 }
 
-# CELERY STUFF
 BROKER_URL = REDIS_LOCATION
 CELERY_RESULT_BACKEND = BROKER_URL
 
@@ -133,29 +132,53 @@ CAN_REPORT_MEDIA = False
 MAX_MEDIA_PER_PLAYLIST = 500
 ALLOW_MENTION_IN_COMMENTS = True
 
-# django-allauth settings
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 USERS_CAN_SELF_REGISTER = False
 GLOBAL_LOGIN_REQUIRED = True
 
 # ============================================
+# ENCODING BACKEND CONFIGURATION (FROM .ENV)
+# ============================================
+# Controls CPU vs GPU encoding path in files/helpers.py
+# ENCODING_BACKEND=cpu  -> libx264 (default, current behavior unchanged)
+# ENCODING_BACKEND=gpu  -> h264_nvenc (requires NVIDIA GPU + nvidia-container-toolkit)
+#
+# NOTE: gpu backend only affects h264 profiles
+#       vp9 and h265 always use CPU encoders regardless of this setting
+
+_encoding_backend = os.environ.get('ENCODING_BACKEND', 'cpu').lower().strip()
+valid_encoding_backends = ['cpu', 'gpu']
+if _encoding_backend not in valid_encoding_backends:
+    print(f"⚠️  WARNING: Invalid ENCODING_BACKEND in .env: {_encoding_backend}")
+    print(f"   Valid options: cpu, gpu")
+    print(f"   Falling back to default: cpu")
+    _encoding_backend = 'cpu'
+
+ENCODING_BACKEND = _encoding_backend
+
+# NVENC preset for GPU encoding (only active when ENCODING_BACKEND=gpu)
+# Valid range: p1 (fastest) to p7 (highest quality)
+# p4 is recommended as equivalent to CPU preset 'faster'
+_gpu_preset = os.environ.get('ENCODING_GPU_PRESET', 'p4').lower().strip()
+valid_gpu_presets = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']
+if _gpu_preset not in valid_gpu_presets:
+    print(f"⚠️  WARNING: Invalid ENCODING_GPU_PRESET in .env: {_gpu_preset}")
+    print(f"   Valid options: p1 (fastest) to p7 (highest quality)")
+    print(f"   Falling back to default: p4")
+    _gpu_preset = 'p4'
+
+ENCODING_GPU_PRESET = _gpu_preset
+
+# ============================================
 # VIDEO ENCODING SETTINGS (FROM .ENV)
 # ============================================
-# All encoding settings now centralized in .env file
-# These settings normalize all uploads to a consistent streaming format
-
-# CRITICAL: Enable/disable transcoding
-# Reads from FFMPEG_TRANSCODE_ENABLED in .env (default: true)
 _transcode_enabled = os.environ.get('FFMPEG_TRANSCODE_ENABLED', 'true').lower()
 DO_NOT_TRANSCODE_VIDEO = _transcode_enabled != 'true'
 
-# Parse resolution list from .env
-# Reads from FFMPEG_RESOLUTIONS in .env (default: 480,720,1080)
 _resolutions_str = os.environ.get('FFMPEG_RESOLUTIONS', '480,720,1080')
 try:
     MINIMUM_RESOLUTIONS_TO_ENCODE = [int(r.strip()) for r in _resolutions_str.split(',') if r.strip()]
-    # Validate resolutions are in acceptable range
     valid_resolutions = [144, 240, 360, 480, 720, 1080, 1440, 2160]
     MINIMUM_RESOLUTIONS_TO_ENCODE = [r for r in MINIMUM_RESOLUTIONS_TO_ENCODE if r in valid_resolutions]
     if not MINIMUM_RESOLUTIONS_TO_ENCODE:
@@ -166,8 +189,6 @@ except (ValueError, AttributeError) as e:
     print(f"   Falling back to default: [480, 720, 1080]")
     MINIMUM_RESOLUTIONS_TO_ENCODE = [480, 720, 1080]
 
-# FFmpeg preset for encoding speed vs quality
-# Reads from FFMPEG_PRESET in .env (default: faster)
 FFMPEG_DEFAULT_PRESET = os.environ.get('FFMPEG_PRESET', 'faster')
 valid_presets = ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 if FFMPEG_DEFAULT_PRESET not in valid_presets:
@@ -176,8 +197,6 @@ if FFMPEG_DEFAULT_PRESET not in valid_presets:
     print(f"   Falling back to default: faster")
     FFMPEG_DEFAULT_PRESET = 'faster'
 
-# H.264 profile for compression/compatibility balance
-# Reads from FFMPEG_H264_PROFILE in .env (default: main)
 FFMPEG_H264_PROFILE = os.environ.get('FFMPEG_H264_PROFILE', 'main')
 valid_profiles = ['baseline', 'main', 'high']
 if FFMPEG_H264_PROFILE not in valid_profiles:
@@ -186,8 +205,6 @@ if FFMPEG_H264_PROFILE not in valid_profiles:
     print(f"   Falling back to default: main")
     FFMPEG_H264_PROFILE = 'main'
 
-# CRF (Constant Rate Factor) for quality control
-# Reads from FFMPEG_CRF_H264 in .env (default: 22)
 try:
     FFMPEG_CRF_H264 = int(os.environ.get('FFMPEG_CRF_H264', '22'))
     if not (18 <= FFMPEG_CRF_H264 <= 28):
@@ -198,7 +215,6 @@ except (ValueError, TypeError) as e:
     print(f"   Falling back to default: 22")
     FFMPEG_CRF_H264 = 22
 
-# H.265/HEVC CRF (future codec support)
 try:
     FFMPEG_CRF_H265 = int(os.environ.get('FFMPEG_CRF_H265', '28'))
     if not (20 <= FFMPEG_CRF_H265 <= 32):
@@ -208,7 +224,6 @@ except (ValueError, TypeError) as e:
     print(f"   Falling back to default: 28")
     FFMPEG_CRF_H265 = 28
 
-# VP9 CRF (future codec support)
 try:
     FFMPEG_CRF_VP9 = int(os.environ.get('FFMPEG_CRF_VP9', '32'))
     if not (24 <= FFMPEG_CRF_VP9 <= 40):
@@ -218,8 +233,6 @@ except (ValueError, TypeError) as e:
     print(f"   Falling back to default: 32")
     FFMPEG_CRF_VP9 = 32
 
-# CRITICAL: Force AAC audio codec (required for HLS)
-# Reads from FFMPEG_AUDIO_CODEC in .env (default: aac)
 FFMPEG_AUDIO_CODEC = os.environ.get('FFMPEG_AUDIO_CODEC', 'aac')
 valid_audio_codecs = ['aac', 'opus', 'mp3']
 if FFMPEG_AUDIO_CODEC not in valid_audio_codecs:
@@ -228,10 +241,7 @@ if FFMPEG_AUDIO_CODEC not in valid_audio_codecs:
     print(f"   Falling back to default: aac (required for HLS)")
     FFMPEG_AUDIO_CODEC = 'aac'
 
-# Audio bitrate
-# Reads from FFMPEG_AUDIO_BITRATE in .env (default: 128k)
 FFMPEG_AUDIO_BITRATE = os.environ.get('FFMPEG_AUDIO_BITRATE', '128k')
-# Validate format (must end with 'k')
 if not FFMPEG_AUDIO_BITRATE.endswith('k'):
     print(f"⚠️  WARNING: Invalid FFMPEG_AUDIO_BITRATE format in .env: {FFMPEG_AUDIO_BITRATE}")
     print(f"   Format must be: 96k, 128k, 192k, or 256k")
@@ -241,16 +251,9 @@ if not FFMPEG_AUDIO_BITRATE.endswith('k'):
 # ============================================
 # HLS STREAMING SETTINGS (FROM .ENV)
 # ============================================
-# Enable HLS for adaptive streaming with segment-based delivery
-# CyTube supports HLS via application/x-mpegURL content type
-
-# CRITICAL: Enable HLS transcoding
-# Reads from HLS_ENABLED in .env (default: true)
 _hls_enabled = os.environ.get('HLS_ENABLED', 'true').lower()
 HLS_ENABLE = _hls_enabled == 'true'
 
-# HLS segment duration in seconds
-# Reads from HLS_SEGMENT_TIME in .env (default: 6)
 try:
     HLS_TIME = int(os.environ.get('HLS_SEGMENT_TIME', '6'))
     if not (2 <= HLS_TIME <= 10):
@@ -261,40 +264,40 @@ except (ValueError, TypeError) as e:
     print(f"   Falling back to default: 6")
     HLS_TIME = 6
 
-# Additional HLS optimization flags
-# Reads from HLS_FLAGS in .env (default: independent_segments)
 FFMPEG_HLS_FLAGS = os.environ.get('HLS_FLAGS', 'independent_segments')
 
 # ============================================
 # ENCODING CONFIGURATION SUMMARY (LOGGING)
 # ============================================
-# Log the complete encoding configuration on startup for troubleshooting
 print("\n" + "="*80)
 print("🎬 FFMPEG ENCODING CONFIGURATION (from .env)")
 print("="*80)
+print(f"Encoding Backend:    {ENCODING_BACKEND.upper()}")
+if ENCODING_BACKEND == 'gpu':
+    print(f"GPU Preset:          {ENCODING_GPU_PRESET} (NVENC h264_nvenc)")
+    print(f"⚠️  GPU MODE ACTIVE - Requires NVIDIA GPU + nvidia-container-toolkit")
+else:
+    print(f"CPU Preset:          {FFMPEG_DEFAULT_PRESET} (libx264)")
 print(f"Transcoding Enabled: {not DO_NOT_TRANSCODE_VIDEO}")
-print(f"Target Resolutions: {MINIMUM_RESOLUTIONS_TO_ENCODE}")
-print(f"Encoding Preset: {FFMPEG_DEFAULT_PRESET}")
-print(f"H.264 Profile: {FFMPEG_H264_PROFILE}")
-print(f"H.264 CRF: {FFMPEG_CRF_H264} (lower = better quality, larger files)")
-print(f"H.265 CRF: {FFMPEG_CRF_H265} (future codec support)")
-print(f"VP9 CRF: {FFMPEG_CRF_VP9} (future codec support)")
-print(f"Audio Codec: {FFMPEG_AUDIO_CODEC}")
-print(f"Audio Bitrate: {FFMPEG_AUDIO_BITRATE}")
+print(f"Target Resolutions:  {MINIMUM_RESOLUTIONS_TO_ENCODE}")
+print(f"H.264 Profile:       {FFMPEG_H264_PROFILE}")
+print(f"H.264 CRF:           {FFMPEG_CRF_H264} (maps to -cq {FFMPEG_CRF_H264} on GPU)")
+print(f"H.265 CRF:           {FFMPEG_CRF_H265} (future codec support)")
+print(f"VP9 CRF:             {FFMPEG_CRF_VP9} (future codec support, always CPU)")
+print(f"Audio Codec:         {FFMPEG_AUDIO_CODEC}")
+print(f"Audio Bitrate:       {FFMPEG_AUDIO_BITRATE}")
 print(f"\n📺 HLS STREAMING CONFIGURATION")
-print(f"HLS Enabled: {HLS_ENABLE}")
-print(f"Segment Duration: {HLS_TIME} seconds")
-print(f"HLS Flags: {FFMPEG_HLS_FLAGS}")
+print(f"HLS Enabled:         {HLS_ENABLE}")
+print(f"Segment Duration:    {HLS_TIME} seconds")
+print(f"HLS Flags:           {FFMPEG_HLS_FLAGS}")
 print("="*80 + "\n")
 
 # ============================================
 # UPLOAD SETTINGS
 # ============================================
-# Maximum number of media a user can upload
 NUMBER_OF_MEDIA_USER_CAN_UPLOAD = 1000
 USER_CAN_TRANSCRIBE_VIDEO = True
 
-# Chunked upload settings for large files (2-8GB videos)
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
@@ -305,25 +308,18 @@ CHUNK_UPLOAD_TIMEOUT = 7200  # 2 hours
 # ============================================
 # OPENSUBTITLES API CONFIGURATION
 # ============================================
-# Automatic subtitle fetching from OpenSubtitles.com REST API
-# Triggered after video encoding completes via Django post_save signal
-
-# API Authentication (JWT Token Method - RECOMMENDED)
 OPENSUBTITLES_API_KEY = os.environ.get('OPENSUBTITLES_API_KEY', '')
 OPENSUBTITLES_JWT_TOKEN = os.environ.get('OPENSUBTITLES_JWT_TOKEN', '')
 OPENSUBTITLES_API_URL = os.environ.get('OPENSUBTITLES_API_URL', 'https://api.opensubtitles.com/api/v1')
 OPENSUBTITLES_USER_AGENT = os.environ.get('OPENSUBTITLES_USER_AGENT', 'MediaCMS-CyTube/1.0')
 
-# Feature Toggles
 OPENSUBTITLES_ENABLED = os.environ.get('OPENSUBTITLES_ENABLED', 'false').lower() == 'true'
 OPENSUBTITLES_AUTO_DOWNLOAD = os.environ.get('OPENSUBTITLES_AUTO_DOWNLOAD', 'true').lower() == 'true'
 
-# Search Configuration
 OPENSUBTITLES_LANGUAGES = os.environ.get('OPENSUBTITLES_LANGUAGES', 'en').split(',')
 OPENSUBTITLES_MAX_RESULTS = int(os.environ.get('OPENSUBTITLES_MAX_RESULTS', '10'))
 
 # Subtitle Storage Path - MUST use container path, not host path
 # Host path: /mnt/ebs/mediacms_media/original/subtitles
 # Container path: /home/mediacms.io/mediacms/media_files/original/subtitles
-# MediaCMS serves from /media/original/subtitles/ URL
 OPENSUBTITLES_DOWNLOAD_PATH = '/home/mediacms.io/mediacms/media_files/original/subtitles'

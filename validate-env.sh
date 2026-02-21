@@ -1,8 +1,14 @@
 #!/bin/bash
-# dev-v0.2.0 - Validates .env configuration for MediaCMS-CyTube
+# dev-v0.3.0 - Added ENCODING_BACKEND and ENCODING_GPU_PRESET validation
 
 #####
 # CHANGELOG
+# v0.3.0 - GPU ENCODING BACKEND VALIDATION
+#   - Added ENCODING_BACKEND validation (cpu|gpu)
+#   - Added ENCODING_GPU_PRESET validation (p1-p7, only checked when ENCODING_BACKEND=gpu)
+#   - GPU mode emits a HOST REQUIREMENTS warning (nvidia-container-toolkit, docker-compose.gpu.yml)
+#   - CPU mode: zero behavior change, no new warnings
+#   - Added ENCODING_BACKEND line to configuration summary
 # v0.2.0 - FFMPEG ENCODING CONFIGURATION VALIDATION
 #   - Added validation for new FFMPEG_* environment variables
 #   - Conditional validation for OpenSubtitles (only when OPENSUBTITLES_ENABLED=true)
@@ -30,7 +36,7 @@ set -e
 
 echo "========================================"
 echo "MediaCMS-CyTube Environment Validator"
-echo "v0.2.0 - with FFmpeg Configuration"
+echo "v0.3.0 - with GPU Encoding Validation"
 echo "========================================"
 echo ""
 
@@ -163,7 +169,7 @@ if [ -z "$OPENSUBTITLES_ENABLED" ]; then
     WARNING_COUNT=$((WARNING_COUNT + 1))
 elif [ "$OPENSUBTITLES_ENABLED_LOWER" = "true" ]; then
     echo "✅ Enabled"
-    
+
     # Validate API Key
     echo -n "Checking OPENSUBTITLES_API_KEY... "
     if [ -z "$OPENSUBTITLES_API_KEY" ]; then
@@ -179,7 +185,7 @@ elif [ "$OPENSUBTITLES_ENABLED_LOWER" = "true" ]; then
     else
         echo "✅ Configured"
     fi
-    
+
     # Validate JWT Token
     echo -n "Checking OPENSUBTITLES_JWT_TOKEN... "
     if [ -z "$OPENSUBTITLES_JWT_TOKEN" ]; then
@@ -195,7 +201,7 @@ elif [ "$OPENSUBTITLES_ENABLED_LOWER" = "true" ]; then
     else
         echo "✅ Configured"
     fi
-    
+
 elif [ "$OPENSUBTITLES_ENABLED_LOWER" = "false" ]; then
     echo "✅ Disabled (API keys not required)"
 else
@@ -220,7 +226,6 @@ echo -n "Checking CYTUBE_DESCRIPTION... "
 if [ -z "$CYTUBE_DESCRIPTION" ]; then
     echo "⚠️  Using default: 'Custom MediaCMS streaming server'"
 else
-    # Check if .env file line has spaces but no quotes
     if grep -q '^CYTUBE_DESCRIPTION=[^"].*[[:space:]]' .env 2>/dev/null; then
         echo "⚠️  WARNING"
         echo "   Value contains spaces but may be missing quotes in .env"
@@ -240,7 +245,6 @@ echo -n "Checking CYTUBE_ORGANIZATION... "
 if [ -z "$CYTUBE_ORGANIZATION" ]; then
     echo "⚠️  Using default: 'MediaCMS-CyTube'"
 else
-    # Check if .env file line has spaces but no quotes
     if grep -q '^CYTUBE_ORGANIZATION=[^"].*[[:space:]]' .env 2>/dev/null; then
         echo "⚠️  WARNING"
         echo "   Value contains spaces but may be missing quotes in .env"
@@ -281,12 +285,11 @@ echo -n "Checking FFMPEG_RESOLUTIONS... "
 if [ -z "$FFMPEG_RESOLUTIONS" ]; then
     echo "⚠️  Using default: 480,720,1080"
 else
-    # Check for valid resolution format
     VALID_RESOLUTIONS="144 240 360 480 720 1080 1440 2160"
     INVALID_RES=0
     IFS=',' read -ra RES_ARRAY <<< "$FFMPEG_RESOLUTIONS"
     for res in "${RES_ARRAY[@]}"; do
-        res=$(echo "$res" | xargs) # trim whitespace
+        res=$(echo "$res" | xargs)
         if [[ ! " $VALID_RESOLUTIONS " =~ " $res " ]]; then
             if [ $INVALID_RES -eq 0 ]; then
                 echo "❌ INVALID"
@@ -298,7 +301,7 @@ else
             VALIDATION_FAILED=1
         fi
     done
-    
+
     if [ $INVALID_RES -eq 0 ]; then
         echo "✅ Valid: $FFMPEG_RESOLUTIONS"
     else
@@ -308,9 +311,9 @@ else
 fi
 
 # ============================================
-# VALIDATE FFMPEG_PRESET
+# VALIDATE FFMPEG_PRESET (CPU only)
 # ============================================
-echo -n "Checking FFMPEG_PRESET... "
+echo -n "Checking FFMPEG_PRESET (CPU)... "
 VALID_PRESETS="ultrafast superfast veryfast faster fast medium slow slower veryslow"
 if [ -z "$FFMPEG_PRESET" ]; then
     echo "⚠️  Using default: faster"
@@ -319,6 +322,7 @@ elif [[ ! " $VALID_PRESETS " =~ " $FFMPEG_PRESET " ]]; then
     echo "   ERROR: Invalid preset: $FFMPEG_PRESET"
     echo "   Valid options: $VALID_PRESETS"
     echo "   Recommended: faster (best quality/speed balance)"
+    echo "   NOTE: For GPU preset see ENCODING_GPU_PRESET below"
     VALIDATION_FAILED=1
 else
     echo "✅ Valid: $FFMPEG_PRESET"
@@ -356,6 +360,7 @@ elif [ "$FFMPEG_CRF_H264" -lt 18 ] || [ "$FFMPEG_CRF_H264" -gt 28 ]; then
     echo "   WARNING: H.264 CRF should be 18-28 (got $FFMPEG_CRF_H264)"
     echo "   Lower = better quality, larger files"
     echo "   Recommended for movies: 22"
+    echo "   NOTE: Maps to -cq $FFMPEG_CRF_H264 when ENCODING_BACKEND=gpu"
     WARNING_COUNT=$((WARNING_COUNT + 1))
     echo "✅ Accepted: $FFMPEG_CRF_H264"
 else
@@ -432,6 +437,73 @@ elif [[ ! "$FFMPEG_AUDIO_BITRATE" =~ ^[0-9]+k$ ]]; then
     VALIDATION_FAILED=1
 else
     echo "✅ Valid: $FFMPEG_AUDIO_BITRATE"
+fi
+
+# ============================================
+# dev-v0.3.0: ENCODING BACKEND VALIDATION
+# New section — inserted between FFMPEG and HLS sections
+# ============================================
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "ENCODING BACKEND CONFIGURATION"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# VALIDATE ENCODING_BACKEND
+echo -n "Checking ENCODING_BACKEND... "
+ENCODING_BACKEND_LOWER=$(echo "${ENCODING_BACKEND:-cpu}" | tr '[:upper:]' '[:lower:]')
+
+if [ -z "$ENCODING_BACKEND" ]; then
+    echo "⚠️  Not set (defaulting to cpu)"
+    ENCODING_BACKEND_LOWER="cpu"
+    WARNING_COUNT=$((WARNING_COUNT + 1))
+elif [ "$ENCODING_BACKEND_LOWER" = "cpu" ]; then
+    echo "✅ cpu (software encoding via libx264)"
+elif [ "$ENCODING_BACKEND_LOWER" = "gpu" ]; then
+    echo "✅ gpu (hardware encoding via h264_nvenc)"
+    echo ""
+    echo "   ⚠️  GPU MODE ACTIVE — Host requirements:"
+    echo "   1. NVIDIA GPU must be installed on the host"
+    echo "   2. nvidia-container-toolkit must be installed:"
+    echo "      https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html"
+    echo "   3. Start with GPU override:"
+    echo "      docker compose -f docker-compose.yaml -f docker-compose.gpu.yml up -d"
+    echo "   4. Verify GPU available to container:"
+    echo "      docker exec mediacms_celery_worker nvidia-smi"
+    echo ""
+    WARNING_COUNT=$((WARNING_COUNT + 1))
+else
+    echo "❌ INVALID"
+    echo "   ERROR: Invalid ENCODING_BACKEND: $ENCODING_BACKEND"
+    echo "   Valid options: cpu, gpu"
+    echo "   Recommended: cpu (default, works on all servers)"
+    VALIDATION_FAILED=1
+fi
+
+# VALIDATE ENCODING_GPU_PRESET (only enforced when ENCODING_BACKEND=gpu)
+echo -n "Checking ENCODING_GPU_PRESET... "
+VALID_GPU_PRESETS="p1 p2 p3 p4 p5 p6 p7"
+if [ -z "$ENCODING_GPU_PRESET" ]; then
+    echo "⚠️  Not set (defaulting to p4)"
+    WARNING_COUNT=$((WARNING_COUNT + 1))
+elif [[ ! " $VALID_GPU_PRESETS " =~ " $ENCODING_GPU_PRESET " ]]; then
+    if [ "$ENCODING_BACKEND_LOWER" = "gpu" ]; then
+        echo "❌ INVALID"
+        echo "   ERROR: Invalid GPU preset: $ENCODING_GPU_PRESET"
+        echo "   Valid options: p1 (fastest) to p7 (highest quality)"
+        echo "   Recommended: p4 (equivalent to CPU preset 'faster')"
+        VALIDATION_FAILED=1
+    else
+        echo "⚠️  Invalid value: $ENCODING_GPU_PRESET (not active — ENCODING_BACKEND=cpu)"
+        echo "   Valid options when GPU active: p1 (fastest) to p7 (highest quality)"
+        WARNING_COUNT=$((WARNING_COUNT + 1))
+    fi
+else
+    if [ "$ENCODING_BACKEND_LOWER" = "gpu" ]; then
+        echo "✅ Valid: $ENCODING_GPU_PRESET (active — ENCODING_BACKEND=gpu)"
+    else
+        echo "✅ Valid: $ENCODING_GPU_PRESET (not active — ENCODING_BACKEND=cpu)"
+    fi
 fi
 
 # ============================================
@@ -553,9 +625,15 @@ else
     echo "   Admin Email:  $ADMIN_EMAIL"
     echo ""
     echo "🎬 FFmpeg Encoding:"
+    echo "   Backend:      ${ENCODING_BACKEND:-cpu}"
+    if [ "$ENCODING_BACKEND_LOWER" = "gpu" ]; then
+        echo "   GPU Preset:   ${ENCODING_GPU_PRESET:-p4} (h264_nvenc)"
+    else
+        echo "   CPU Preset:   ${FFMPEG_PRESET:-faster} (libx264)"
+    fi
     echo "   Transcoding:  ${FFMPEG_TRANSCODE_ENABLED:-true}"
     echo "   Resolutions:  ${FFMPEG_RESOLUTIONS:-480,720,1080}"
-    echo "   Preset:       ${FFMPEG_PRESET:-faster}"
+    echo "   H.264 Profile:${FFMPEG_H264_PROFILE:-main}"
     echo "   H.264 CRF:    ${FFMPEG_CRF_H264:-22}"
     echo "   Audio:        ${FFMPEG_AUDIO_CODEC:-aac} @ ${FFMPEG_AUDIO_BITRATE:-128k}"
     echo ""
@@ -582,9 +660,14 @@ else
     fi
     echo "✅ Ready to deploy!"
     echo ""
-    echo "Next steps:"
-    echo "  1. ./cytube-execute-all-sh-and-storage-init.sh"
-    echo "  2. Or manually: docker-compose up -d"
+    if [ "$ENCODING_BACKEND_LOWER" = "gpu" ]; then
+        echo "GPU MODE — Start command:"
+        echo "  docker compose -f docker-compose.yaml -f docker-compose.gpu.yml up -d"
+    else
+        echo "Next steps:"
+        echo "  1. ./cytube-execute-all-sh-and-storage-init.sh"
+        echo "  2. Or manually: docker-compose up -d"
+    fi
     echo ""
     exit 0
 fi
