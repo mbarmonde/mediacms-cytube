@@ -28,7 +28,10 @@
   - [Enable Huge Files (>5GB)](#enable-huge-files-5gb)
   - [Security Best Practices](#security-best-practices)
 - [Dev Session Logs](#dev-session-logs)
+  - [Session: Feb 21, 2026 — Missing Migration Fix + Deploy-Time Drift Guard](#session-feb-21-2026--missing-migration-fix--deploy-time-drift-guard)
   - [Session: Feb 17, 2026 — Storage Hardcode Fix + GPU Encoding Infrastructure](#session-feb-17-2026--storage-hardcode-fix--gpu-encoding-infrastructure)
+
+  Infrastructure](#session-feb-17-2026--storage-hardcode-fix--gpu-encoding-infrastructure)
 - [Looking for the Original MediaCMS?](#looking-for-the-original-mediacms)
   - [Plug in!](#plug-in)
   - [Contact](#contact)
@@ -588,6 +591,129 @@ echo "Backup complete: $BACKUP_DIR"
 # Dev Session Logs
 
 Full implementation notes for each development session. Most recent first.
+
+---
+
+## Session: Feb 21, 2026 — Missing Migration Fix + Deploy-Time Drift Guard
+
+> **Scope:** Production bug fix — upload 500 error caused by uncommitted migration. Added permanent structural guard to prevent recurrence on all future deploys.
+> **Severity:** P0 — uploads completely broken on affected instance.
+
+### Root Cause
+
+```
+ERROR: column files_media.subtitle_timing_offset does not exist
+```
+
+`subtitle_timing_offset` was added to `files/models/media.py` (dev-v0.1.3) but `makemigrations` was never run, so no migration file was generated or committed. On the running instance the column existed (added manually at some point), but any fresh deploy would hit the same crash immediately.
+
+The failure chain:
+```
+Django queries files_media including subtitle_timing_offset
+  → Postgres: column does not exist → 500
+  → Fine Uploader: POST /fu/upload/?done returns 500
+  → Fine Uploader retries 3x → 400 (duplicate finalize attempt)
+  → Upload fails with "Error with File Uploading"
+```
+
+The 400s and Fine Uploader stack traces in the browser console were noise — the only signal that mattered was the single Postgres line in `docker-compose logs`.
+
+### Diagnosis Steps
+
+```bash
+# Step 1: Confirmed all existing migrations were applied (no unapplied boxes)
+docker exec media_cms python manage.py showmigrations files
+# Result: 0001-0014 all [X] — State B (migration file simply didn't exist)
+
+# Step 2: Confirmed column was present in DB (added outside Django's knowledge)
+docker exec mediacms_db psql -U mediacms -d mediacms \
+  -c "\d files_media" | grep subtitle
+# Result: subtitle_timing_offset | double precision | not null
+```
+
+### Fix
+
+```bash
+# Generate the missing migration
+docker exec media_cms python manage.py makemigrations files \
+  --name "add_subtitle_timing_offset"
+# Result: files/migrations/0015_add_subtitle_timing_offset.py created
+
+# Apply it (marks it as applied in Django's migration history)
+docker exec media_cms python manage.py migrate files
+# Result: No migrations to apply (column already existed — correct)
+
+# Copy migration file out of container into working tree
+docker cp media_cms:/home/mediacms.io/mediacms/files/migrations/0015_add_subtitle_timing_offset.py \
+  /mediacms/files/migrations/0015_add_subtitle_timing_offset.py
+
+# Restart web container
+docker-compose restart media_cms
+```
+
+### Permanent Guard — `cytube-execute-all-sh-and-storage-init.sh` dev-v0.4.0
+
+A new **Step 5.5** was added between container health checks and subtitle initialization. It runs `makemigrations --check` inside the running `media_cms` container. This command exits non-zero if any model change exists without a corresponding migration file, and zero if everything is in sync.
+
+**On a clean deploy (normal case):**
+```
+STEP 5.5: Checking for missing migrations...
+✅ All model migrations are present and accounted for
+```
+
+**On drift detected (model changed, migration not committed):**
+```
+STEP 5.5: Checking for missing migrations...
+
+========================================
+❌ MIGRATION DRIFT DETECTED
+========================================
+
+One or more model changes have no corresponding migration file.
+This will cause 500 errors at runtime when the missing column is queried.
+
+To fix:
+  1. Generate the missing migration:
+     docker exec media_cms python manage.py makemigrations
+
+  2. Copy it out of the container:
+     docker cp media_cms:/home/mediacms.io/mediacms/<app>/migrations/<file>.py \
+       /mediacms/<app>/migrations/<file>.py
+
+  3. Apply it:
+     docker exec media_cms python manage.py migrate
+
+  4. Commit the migration file to the repo before next deploy
+
+Startup aborted. Fix migration drift and re-run this script.
+```
+
+Startup is fully blocked — the server never goes live in a broken state.
+
+### Files Changed
+
+| File | From | To | Type |
+|---|---|---|---|
+| `files/migrations/0015_add_subtitle_timing_offset.py` | *(missing)* | **new file** | Bug fix |
+| `cytube-execute-all-sh-and-storage-init.sh` | dev-v0.3.0 | **dev-v0.4.0** | Guard added |
+
+### Migration Workflow — Correct Process Going Forward
+
+Any time a new field is added to any model, this sequence must be followed before committing:
+
+```
+1. Add field to model file
+2. Generate migration:
+   docker exec media_cms python manage.py makemigrations
+3. Copy migration file out of container:
+   docker cp media_cms:/home/mediacms.io/mediacms/<app>/migrations/<new_file>.py \
+     /mediacms/<app>/migrations/<new_file>.py
+4. Commit BOTH the model change AND the migration file in the same commit
+5. On fresh deploy: migrate runs automatically on container startup,
+   Step 5.5 confirms sync before any schema-dependent code runs
+```
+
+If step 4 is skipped, Step 5.5 will catch it on the next deploy and block startup with instructions.
 
 ---
 
