@@ -180,7 +180,6 @@ Before going live, verify:
 ## MediaCMS for CyTube Key Changes
 
 This fork of MediaCMS features integration for CyTube, including:
-
 - **GPU Encoding Infrastructure (Forward-Looking)** — Added `ENCODING_BACKEND` toggle (`cpu`|`gpu`) and `docker-compose.gpu.yml` compose overlay for NVIDIA NVENC hardware encoding. GPU path is fully dormant by default (`ENCODING_BACKEND=cpu`). CPU encoding behavior is unchanged. — Added 02/17/2026
 - **Storage Path Fully Configurable via `.env`** — `init_validate_storage.sh` now reads `MEDIA_FILES_PATH` from `.env` with `/mnt/ebs/mediacms_media` as fallback. All `/mnt/ebs` hardcodes removed. Any host path is supported. — Added 02/17/2026
 - **Subtitles Offset in UI** — (edit video > Captions) Subtitle Timing Offset (seconds) — Adjust subtitle timing: negative delays subtitles (e.g., -4.5), positive advances them. Changes auto-refresh subtitles. — Added 02/15/2026
@@ -244,9 +243,14 @@ This fork of MediaCMS features integration for CyTube, including:
   Wait for encoding to complete (check progress bar)
 
 - **Generate CyTube Manifest**
-  Once encoding completes:
+  
+  - After the upload shows 'View media'
   - Go to the video page
-  - Click the "Export to CyTube" button (floating blue button)
+  - Click the green "edit media" button to rename the video (note: the interface cannot be in dark mode as you cannot see the options)
+  - CRITICAL: Rename the video as: Title.Year (e.g. The.Matrix.1999; Gone.With.The.Wind.1939; Moonraker.1979; this is to ensure that subtitle processing can happen automatically if enabled (by default))
+  - Wait for all encoding to complete (via the widget for status. Note: You can navigate away from the page when encoding is processing as it is a background event, which varies based on video uploaded (e.g. 1080p, 720p, 480p)  
+  - Refresh the page
+  - Once completed and the video name is correct, click the "Export to CyTube" button (floating blue button)
   - Manifest URL is copied to clipboard
   - Manifest URL format: `https://yourdomain.com/media/custom/XXXXX_VideoTitle.json`
 
@@ -254,6 +258,7 @@ This fork of MediaCMS features integration for CyTube, including:
   - Click Add Video from URL
   - Paste the manifest URL
   - Video should play with quality selector (480p/720p/1080p)
+  - Subtitles should also be available cia the video player 'cc' button
 
 ## Verify Subtitle Languages
 
@@ -265,35 +270,40 @@ docker exec mediacms_db psql -U mediacms -d mediacms -c "SELECT COUNT(*) FROM fi
 
 Here is an example `.json` manifest file encoded dynamically based on native resolutions for CyTube, publicly accessible at `https://YOUR.DOMAIN.COM/media/custom/(manifest).json`:
 
-```json
+```
 {
-  "title": "Moonraker.(1979)",
-  "duration": 7589,
+  "title": "Black.Tight.Killers.1966",
+  "duration": 5257,
   "live": false,
-  "thumbnail": "https://YOUR.DOMAIN.COM/media/original/thumbnails/user/superadmin02/979a61dd99a14e8f9924d3857f2ea422_xjNM67n.Moonraker.1979.mkv.jpg",
+  "thumbnail": "https://dev02.420grindhouseserver.com/media/original/thumbnails/user/superadmin02/58d0de9da9b74458a2e52cc85dd130eb_DQwnYgt.Black.Tight.Killers.1966.JAPANESE.1080p.BluRay.x264.AACYTS.MX.mp4.jpg",
   "sources": [
     {
-      "url": "https://YOUR.DOMAIN.COM/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
+      "url": "https://dev02.420grindhouseserver.com/media/hls/58d0de9da9b74458a2e52cc85dd130eb/master.m3u8",
       "contentType": "application/x-mpegURL",
       "quality": 480
     },
     {
-      "url": "https://YOUR.DOMAIN.COM/media/hls/979a61dd99a14e8f9924d3857f2ea422/master.m3u8",
+      "url": "https://dev02.420grindhouseserver.com/media/hls/58d0de9da9b74458a2e52cc85dd130eb/master.m3u8",
       "contentType": "application/x-mpegURL",
       "quality": 720
+    },
+    {
+      "url": "https://dev02.420grindhouseserver.com/media/hls/58d0de9da9b74458a2e52cc85dd130eb/master.m3u8",
+      "contentType": "application/x-mpegURL",
+      "quality": 1080
     }
   ],
   "textTracks": [
     {
-      "url": "https://YOUR.DOMAIN.COM/media/original/subtitles/user/superadmin02/Moonraker.1979.720p.BRRip.x264.AAC-ViSiON.srt",
+      "url": "https://dev02.420grindhouseserver.com/media/original/subtitles/user/superadmin02/58d0de9da9b74458a2e52cc85dd130eb.vtt",
       "contentType": "text/vtt",
       "name": "English"
     }
   ],
   "meta": {
-    "description": "",
-    "streaming_method": "hls_adaptive_2_resolutions",
-    "media_hash": "979a61dd99a14e8f9924d3857f2ea422",
+    "description": "Custom MediaCMS streaming server for CyTube integration",
+    "streaming_method": "hls_adaptive_3_resolutions",
+    "media_hash": "58d0de9da9b74458a2e52cc85dd130eb",
     "subtitle_count": 1
   }
 }
@@ -332,43 +342,45 @@ Caddy Reverse Proxy (Port 443)
 ```
 === DEVELOPMENT VERSIONS (dev-vX.X.X) ===
 
-├── .env                                          # dev-v0.4.0
+├── .env                                           # dev-v0.4.0
 caddy/
-│   ├── Caddyfile                                 # dev-v0.4.0
+│   ├── Caddyfile                                  # dev-v0.4.0
 cms/
-│   ├── urls.py                                   # dev-v0.1.0
-├── custom_api.py                                 # dev-v0.6.0
-├── custom_urls.py                                # dev-v0.1.3
-├── cytube-execute-all-sh-and-storage-init.sh     # dev-v0.3.0
+│   ├── urls.py                                    # dev-v0.1.0
+├── custom_api.py                                  # dev-v0.6.0
+├── custom_urls.py                                 # dev-v0.1.3
+├── cytube-execute-all-sh-and-storage-init.sh      # dev-v0.4.1
 deploy/
 │   ├── docker/
-│   │   ├── local_settings.py                     # dev-v0.4.0
-│   │   ├── nginx_http_only.conf                  # dev-v0.1.0
-├── docker-compose.gpu.yml                        # dev-v0.1.0  ← NEW
-├── docker-compose.yaml                           # dev-v0.4.1
+│   │   ├── local_settings.py                      # dev-v0.4.0
+│   │   ├── nginx_http_only.conf                   # dev-v0.1.0
+├── docker-compose.gpu.yml                         # dev-v0.1.0
+├── docker-compose.yaml                            # dev-v0.4.1
 files/
-│   ├── forms.py                                  # dev-v0.1.3
-│   ├── helpers.py                                # dev-v0.2.0
+│   ├── forms.py                                   # dev-v0.1.3
+│   ├── helpers.py                                 # dev-v0.2.0
+│   ├── migrations/
+│   │   ├── 0015_add_subtitle_timing_offset.py     # dev-v0.1.0
 │   ├── models/
-│   │   ├── media.py                              # dev-v0.1.9
-│   ├── tasks.py                                  # dev-v0.1.3
+│   │   ├── media.py                               # dev-v0.1.9
+│   ├── tasks.py                                   # dev-v0.1.3
 │   ├── views/
-│   │   ├── pages.py                              # dev-v0.1.0
-├── monitor-mediacms-uploads.sh                   # dev-v0.2.0
+│   │   ├── pages.py                               # dev-v0.1.0
+├── monitor-mediacms-uploads.sh                    # dev-v0.2.0
 scripts/
-│   ├── docker-healthcheck.sh                     # dev-v0.5.3
-│   ├── init_subtitle_languages.sh                # dev-v0.1.3
-│   ├── init_validate_storage.sh                  # dev-v0.1.2
+│   ├── docker-healthcheck.sh                      # dev-v0.5.3
+│   ├── init_subtitle_languages.sh                 # dev-v0.1.3
+│   ├── init_validate_storage.sh                   # dev-v0.1.2
 static/
 │   ├── js/
-│   │   ├── cytube-export.js                      # dev-v0.1.0
-│   │   ├── encoding-status.js                    # dev-v0.1.7
-├── subtitle_fetcher.py                           # dev-v0.1.7
+│   │   ├── cytube-export.js                       # dev-v0.1.0
+│   │   ├── encoding-status.js                     # dev-v0.1.7
+├── subtitle_fetcher.py                            # dev-v0.1.7
 templates/
-│   ├── root.html                                 # dev-v0.1.0
-├── test_opensubtitles.py                         # dev-v0.1.2
-├── test_subtitle_fetcher_standalone.py           # dev-v0.1.0
-├── validate-env.sh                               # dev-v0.3.0
+│   ├── root.html                                  # dev-v0.1.0
+├── test_opensubtitles.py                          # dev-v0.1.2
+├── test_subtitle_fetcher_standalone.py            # dev-v0.1.0
+├── validate-env.sh                                # dev-v0.3.0
 ```
 
 ## MediaCMS for CyTube Storage Architecture for Block Storage

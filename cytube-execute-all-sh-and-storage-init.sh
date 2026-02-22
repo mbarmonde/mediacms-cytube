@@ -1,9 +1,13 @@
 #!/bin/bash
 
-# dev-v0.4.0 - Added makemigrations --check guard before subtitle init
+# dev-v0.4.1 - DEST_DIR now derived from script location, not hardcoded
 
 #####
 # CHANGELOG
+# v0.4.1 - DYNAMIC DEST_DIR DETECTION
+#   - DEST_DIR now set from script's own location via BASH_SOURCE[0]
+#   - Repo can be cloned to any directory name or path
+#   - No behavior change when cloned to /mediacms (previous default)
 # v0.4.0 - MIGRATION DRIFT GUARD
 #   - Added Step 5.5: makemigrations --check after containers are healthy
 #   - Detects model changes that have no corresponding migration file
@@ -52,7 +56,9 @@
 # ✅ Success message with URL and credentials
 #####
 
-DEST_DIR="/mediacms"
+# Derive DEST_DIR from the location of this script.
+# Works regardless of what directory the repo was cloned into.
+DEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "========================================"
 echo "MediaCMS-CyTube Startup Script"
@@ -233,9 +239,6 @@ fi
 
 # ============================================
 # STEP 5.5: MIGRATION DRIFT CHECK
-# Detects model fields added without a corresponding migration file.
-# Catches the class of bug where a column exists in models.py but not
-# in the database, causing 500 errors on first use of that field.
 # ============================================
 echo "STEP 5.5: Checking for missing migrations..."
 echo "----------------------------------------"
@@ -260,7 +263,7 @@ if [ $MIGRATION_CHECK_EXIT -ne 0 ]; then
     echo "     docker exec media_cms python manage.py makemigrations"
     echo ""
     echo "  2. Copy it out of the container:"
-    echo "     docker exec media_cms python manage.py showmigrations | grep '\\[ \\]'"
+    echo "     docker exec media_cms python manage.py showmigrations | grep '\[ \]'"
     echo "     # Note the new migration filename, then:"
     echo "     docker cp media_cms:/home/mediacms.io/mediacms/<app>/migrations/<file>.py \\"
     echo "       $DEST_DIR/<app>/migrations/<file>.py"
